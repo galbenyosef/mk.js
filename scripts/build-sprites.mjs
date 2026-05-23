@@ -32,6 +32,11 @@ async function buildSpritesheet(fighterName) {
     }
   }
 
+  if (allFrames.length === 0) {
+    console.warn(`Warning: no frames found for fighter "${fighterName}", skipping.`);
+    return;
+  }
+
   const buffers = await Promise.all(
     allFrames.map(f => sharp(f.path).toBuffer())
   );
@@ -87,11 +92,19 @@ async function buildSpritesheet(fighterName) {
 
 async function main() {
   try {
+    await fs.stat(RAW_DIR).catch(() => {
+      console.error(`Error: raw assets directory "${RAW_DIR}" does not exist.`);
+      process.exit(1);
+    });
     const fighters = await fs.readdir(RAW_DIR);
     for (const fighter of fighters) {
       const stat = await fs.stat(path.join(RAW_DIR, fighter));
       if (stat.isDirectory()) {
-        await buildSpritesheet(fighter);
+        try {
+          await buildSpritesheet(fighter);
+        } catch (err) {
+          console.error(`Error building spritesheet for "${fighter}":`, err);
+        }
       }
     }
     console.log('All spritesheets built.');
