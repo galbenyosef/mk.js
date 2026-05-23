@@ -1,16 +1,44 @@
 import Phaser from 'phaser';
 import type { GameOptions } from '@mk.js/shared';
 
+const FIGHTERS = ['subzero', 'kano', 'liukang', 'sonya'];
+const DISPLAY = ['SUB-ZERO', 'KANO', 'LIU KANG', 'SONYA'];
+
 export class MenuScene extends Phaser.Scene {
-  constructor() {
-    super({ key: 'Menu' });
-  }
+  private _p1Fighter = 0;
+  private _p2Fighter = 1;
+
+  constructor() { super({ key: 'Menu' }); }
 
   create(): void {
     this.cameras.main.setBackgroundColor('#111111');
-    this.add.text(300, 60, 'MK.JS', {
+    this.add.text(300, 25, 'MK.JS', {
       fontFamily: 'monospace', fontSize: '48px', color: '#ff0000', fontStyle: 'bold',
     }).setOrigin(0.5);
+
+    // Fighter selectors
+    this.add.text(200, 85, 'P1:', { fontFamily: 'monospace', fontSize: '16px', color: '#00ccff' }).setOrigin(0.5);
+    const p1Text = this.add.text(250, 85, DISPLAY[this._p1Fighter], {
+      fontFamily: 'monospace', fontSize: '16px', color: '#fff',
+      backgroundColor: '#444', padding: { x: 8, y: 4 },
+    }).setOrigin(0, 0.5).setInteractive({ useHandCursor: true });
+
+    this.add.text(370, 85, 'P2:', { fontFamily: 'monospace', fontSize: '16px', color: '#ff6666' }).setOrigin(0.5);
+    const p2Text = this.add.text(400, 85, DISPLAY[this._p2Fighter], {
+      fontFamily: 'monospace', fontSize: '16px', color: '#fff',
+      backgroundColor: '#444', padding: { x: 8, y: 4 },
+    }).setOrigin(0, 0.5).setInteractive({ useHandCursor: true });
+
+    p1Text.on('pointerdown', () => {
+      this._p1Fighter = (this._p1Fighter + 1) % FIGHTERS.length;
+      if (this._p1Fighter === this._p2Fighter) this._p1Fighter = (this._p1Fighter + 1) % FIGHTERS.length;
+      p1Text.setText(DISPLAY[this._p1Fighter]);
+    });
+    p2Text.on('pointerdown', () => {
+      this._p2Fighter = (this._p2Fighter + 1) % FIGHTERS.length;
+      if (this._p2Fighter === this._p1Fighter) this._p2Fighter = (this._p2Fighter + 1) % FIGHTERS.length;
+      p2Text.setText(DISPLAY[this._p2Fighter]);
+    });
 
     const modes: { label: string; mode: GameOptions['mode'] }[] = [
       { label: '1 PLAYER BASIC', mode: 'basic' },
@@ -23,7 +51,7 @@ export class MenuScene extends Phaser.Scene {
       const y = 160 + i * 50;
       const btn = this.add.text(300, y, label, {
         fontFamily: 'monospace', fontSize: '18px', color: '#ffffff',
-        backgroundColor: '#333333', padding: { x: 16, y: 8 },
+        backgroundColor: '#333', padding: { x: 16, y: 8 },
       }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
       btn.on('pointerover', () => btn.setColor('#ffff00'));
@@ -35,8 +63,8 @@ export class MenuScene extends Phaser.Scene {
         } else {
           const options: GameOptions = {
             mode,
-            p1Fighter: 'subzero',
-            p2Fighter: 'kano',
+            p1Fighter: FIGHTERS[this._p1Fighter],
+            p2Fighter: FIGHTERS[this._p2Fighter],
             arena: 'throne-room',
           };
           this.scene.start('Game', options);

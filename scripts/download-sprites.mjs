@@ -4,7 +4,7 @@ import { createWriteStream } from 'node:fs';
 import { get } from 'node:https';
 
 const BASE = 'https://www.mortalkombatwarehouse.com';
-const FIGHTERS = ['subzero', 'kano'];
+const FIGHTERS = ['subzero', 'kano', 'liukang', 'sonya'];
 
 function fetch(url) {
   return new Promise((resolve, reject) => {

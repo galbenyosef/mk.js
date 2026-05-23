@@ -8,6 +8,8 @@ export class PreloadScene extends Phaser.Scene {
     this.load.on('progress', (v: number) => bar.setScale(v, 1));
     this.load.atlas('fighters/subzero', '/assets/build/subzero/spritesheet.png', '/assets/build/subzero/spritesheet.json');
     this.load.atlas('fighters/kano', '/assets/build/kano/spritesheet.png', '/assets/build/kano/spritesheet.json');
+    this.load.atlas('fighters/liukang', '/assets/build/liukang/spritesheet.png', '/assets/build/liukang/spritesheet.json');
+    this.load.atlas('fighters/sonya', '/assets/build/sonya/spritesheet.png', '/assets/build/sonya/spritesheet.json');
     this.load.image('arenas/throne-room', '/assets/build/arenas/throne-room.png');
     this.load.audio('sfx/hit', '/assets/build/sounds/hitsounds/mk3-00100.mp3');
     this.load.audio('sfx/hit2', '/assets/build/sounds/hitsounds/mk3-00105.mp3');
