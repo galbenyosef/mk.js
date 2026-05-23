@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { GameCollection } from '../games.js';
+import { Game, GameCollection } from '../games.js';
 
 describe('GameCollection', () => {
   it('should create and retrieve a game', () => {
@@ -36,5 +36,39 @@ describe('GameCollection', () => {
     expect(collection.getGame('test-game')).toBeDefined();
     collection.removeGame('test-game');
     expect(collection.getGame('test-game')).toBeUndefined();
+  });
+});
+
+describe('Game', () => {
+  const fakeSocket = { emit: () => {}, on: () => {}, disconnect: () => {} } as any;
+
+  it('should return the correct id', () => {
+    const collection = new GameCollection();
+    const game = collection.createGame('test-id')!;
+    expect(game.id).toBe('test-id');
+  });
+
+  it('should start with 0 players', () => {
+    const collection = new GameCollection();
+    const game = collection.createGame('test-game')!;
+    expect(game.playerCount).toBe(0);
+  });
+
+  it('should accept up to 2 players', () => {
+    const collection = new GameCollection();
+    const game = collection.createGame('test-game')!;
+    expect(game.addPlayer(fakeSocket)).toBe(true);
+    expect(game.playerCount).toBe(1);
+    expect(game.addPlayer(fakeSocket)).toBe(true);
+    expect(game.playerCount).toBe(2);
+  });
+
+  it('should reject a 3rd player', () => {
+    const collection = new GameCollection();
+    const game = collection.createGame('test-game')!;
+    game.addPlayer(fakeSocket);
+    game.addPlayer(fakeSocket);
+    expect(game.addPlayer(fakeSocket)).toBe(false);
+    expect(game.playerCount).toBe(2);
   });
 });

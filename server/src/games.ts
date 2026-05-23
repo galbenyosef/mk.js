@@ -26,7 +26,9 @@ export class Game {
   addPlayer(socket: Socket): boolean {
     if (this._players.length > 1) return false;
     this._players.push(socket);
-    if (this._players.length > 1) {
+    if (this._players.length === 1) {
+      socket.on('disconnect', () => this.endGame(0));
+    } else {
       this._addHandlers();
       this._players[0].emit(Messages.PLAYER_CONNECTED, 0);
     }
@@ -55,7 +57,7 @@ export class Game {
     const opponentIndex = playerOut === 0 ? 1 : 0;
     const opponent = this._players[opponentIndex];
     this._players = [];
-    opponent.disconnect();
+    if (opponent) opponent.disconnect();
     this._collection.removeGame(this._id);
   }
 }
