@@ -19,6 +19,7 @@ const MOVE_DEFS: MoveDef[] = [
   { type: MoveType.FALL, damage: 0, duration: 100, hitFrame: -1, locksPlayer: true, returnTo: MoveType.STAND },
   { type: MoveType.KNOCK_DOWN, damage: 0, duration: 80, hitFrame: -1, locksPlayer: true, returnTo: MoveType.ATTRACTIVE_STAND_UP },
   { type: MoveType.ENDURE, damage: 0, duration: 80, hitFrame: -1, locksPlayer: true, returnTo: MoveType.STAND },
+  { type: MoveType.SQUAT_ENDURE, damage: 0, duration: 80, hitFrame: -1, locksPlayer: true, returnTo: MoveType.SQUAT },
   { type: MoveType.WIN, damage: 0, duration: 100, hitFrame: -1, locksPlayer: true, returnTo: MoveType.WIN },
 ];
 
