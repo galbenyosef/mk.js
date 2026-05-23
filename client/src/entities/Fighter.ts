@@ -37,9 +37,9 @@ export class Fighter extends Phaser.GameObjects.Sprite {
     this.setFlipX(o === 'right');
   }
 
-  trySetMove(type: MoveType): boolean {
+  trySetMove(type: MoveType, force = false): boolean {
     if (this.locked && type !== MoveType.WIN) return false;
-    if (this.currentMove === type) return false;
+    if (!force && this.currentMove === type) return false;
 
     const config = getMoveConfig(type);
     this.currentMove = type;
@@ -62,11 +62,11 @@ export class Fighter extends Phaser.GameObjects.Sprite {
     } else {
       this.locked = false;
       if (this.currentMove === MoveType.SQUAT) {
-        this.trySetMove(MoveType.SQUAT_ENDURE);
+        this.trySetMove(MoveType.SQUAT_ENDURE, true);
       } else if (attackType === MoveType.UPPERCUT || attackType === MoveType.SPIN_KICK) {
-        this.trySetMove(MoveType.KNOCK_DOWN);
+        this.trySetMove(MoveType.KNOCK_DOWN, true);
       } else {
-        this.trySetMove(MoveType.ENDURE);
+        this.trySetMove(MoveType.ENDURE, true);
       }
     }
     this.hp = Math.max(0, this.hp - damage);
