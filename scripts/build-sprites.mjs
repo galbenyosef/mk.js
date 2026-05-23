@@ -23,7 +23,7 @@ async function buildSpritesheet(fighterName) {
       const meta = await sharp(imgPath).metadata();
       allFrames.push({
         path: imgPath,
-        name: `${category}_${file.replace('.png', '')}`,
+        name: `${category}/${file.replace('.png', '')}`,
         width: meta.width,
         height: meta.height,
       });

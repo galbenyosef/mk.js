@@ -15,7 +15,9 @@ export default defineConfig({
         ws: true,
       },
     },
+    fs: { allow: ['..'] },
   },
+  publicDir: path.resolve(__dirname, '..'),
   build: {
     outDir: 'dist',
     sourcemap: true,

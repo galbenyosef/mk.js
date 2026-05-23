@@ -37,7 +37,7 @@ export class MenuScene extends Phaser.Scene {
             p2Fighter: 'kano',
             arena: 'throne-room',
           };
-          this.scene.start('Game', { options });
+          this.scene.start('Game', options);
         }
       });
     });

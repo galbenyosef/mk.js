@@ -50,6 +50,9 @@ export class Game {
 
     p1.on('disconnect', () => this.endGame(0));
     p2.on('disconnect', () => this.endGame(1));
+
+    p1.emit('game-ready');
+    p2.emit('game-ready');
   }
 
   endGame(playerOut: number): void {

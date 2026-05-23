@@ -73,7 +73,7 @@ export class LobbyScene extends Phaser.Scene {
         isHost: this._isHost,
         gameName: 'game1',
       };
-      this.scene.start('Game', { options });
+      this.scene.start('Game', options);
     });
 
     backBtn.on('pointerdown', () => {

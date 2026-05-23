@@ -5,30 +5,28 @@ export function setupLobby(io: Server): void {
   const games = new GameCollection();
 
   io.on('connection', (socket: Socket) => {
-    socket.on('list-games', () => {
-      socket.emit('games-list', games.listGames());
+    socket.on('list-games', (ack?: (games: { gameName: string; playerCount: number }[]) => void) => {
+      if (ack) ack(games.listGames());
     });
 
-    socket.on('create-game', (gameName: string) => {
+    socket.on('create-game', (gameName: string, ack?: (res: { success: boolean; error?: string }) => void) => {
       const game = games.createGame(gameName);
       if (game) {
         game.addPlayer(socket);
-        socket.emit('game-created', { success: true, gameName });
+        if (ack) ack({ success: true });
       } else {
-        socket.emit('game-created', { success: false, error: 'Game already exists' });
+        if (ack) ack({ success: false, error: 'GAME_EXISTS' });
       }
     });
 
-    socket.on('join-game', (gameName: string) => {
+    socket.on('join-game', (gameName: string, ack?: (res: { success: boolean; error?: string }) => void) => {
       const game = games.getGame(gameName);
       if (!game) {
-        socket.emit('game-joined', { success: false, error: 'Game not found' });
-        return;
-      }
-      if (game.addPlayer(socket)) {
-        socket.emit('game-joined', { success: true, gameName });
+        if (ack) ack({ success: false, error: 'GAME_NOT_EXISTS' });
+      } else if (game.addPlayer(socket)) {
+        if (ack) ack({ success: true });
       } else {
-        socket.emit('game-joined', { success: false, error: 'Game is full' });
+        if (ack) ack({ success: false, error: 'GAME_FULL' });
       }
     });
   });

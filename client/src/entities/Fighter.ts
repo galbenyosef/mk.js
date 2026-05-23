@@ -25,6 +25,16 @@ export class Fighter extends Phaser.GameObjects.Sprite {
     scene.add.existing(this);
     this.setOrigin(0.5, 1);
     this.setFlipX(orientation === 'right');
+
+    this.on('animationcomplete', (anim: Phaser.Animations.Animation) => {
+      if (this.locked) {
+        this.locked = false;
+        const config = getMoveConfig(this.currentMove);
+        if (config.returnTo !== this.currentMove) {
+          this.trySetMove(config.returnTo);
+        }
+      }
+    });
   }
 
   get orientation(): 'left' | 'right' {
@@ -51,7 +61,7 @@ export class Fighter extends Phaser.GameObjects.Sprite {
     }
 
     if (config.velocityX) {
-      this.scene.events.emit('fighter-move', this, config.velocityX);
+      this.x += config.velocityX;
     }
     return true;
   }
