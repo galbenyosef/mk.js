@@ -32,6 +32,8 @@ export class GameScene extends Phaser.Scene {
     createAnimations(this, this.options.p1Fighter, `fighters/${this.options.p1Fighter}`);
     createAnimations(this, this.options.p2Fighter, `fighters/${this.options.p2Fighter}`);
 
+    this.add.image(300, 200, `arenas/${this.options.arena}`);
+
     this.arena = new Arena(this);
 
     this.fighters = [

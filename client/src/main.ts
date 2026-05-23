@@ -5,6 +5,11 @@ import { MenuScene } from './scenes/MenuScene.js';
 import { LobbyScene } from './scenes/LobbyScene.js';
 import { GameScene } from './scenes/GameScene.js';
 
+// Expose for e2e test inspection
+declare global {
+  interface Window { __MK_GAME?: Phaser.Game; }
+}
+
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   width: 600,
@@ -18,4 +23,5 @@ const config: Phaser.Types.Core.GameConfig = {
   },
 };
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+window.__MK_GAME = game;

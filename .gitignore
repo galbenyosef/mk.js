@@ -3,3 +3,6 @@ dist/
 assets/raw/
 *.log
 *.tsbuildinfo
+.playwright-cli/
+test-results/
+e2e/screenshots/
