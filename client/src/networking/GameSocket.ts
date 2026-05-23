@@ -61,8 +61,12 @@ export class GameSocket {
     this._socket.on('game-ready', cb);
   }
 
-  onPlayerLeft(cb: () => void): void {
-    this._socket.on('disconnect', cb);
+  onPlayerJoined(cb: (data: { fighterName: string }) => void): void {
+    this._socket.on('player-joined', cb);
+  }
+
+  onPlayerLeft(cb: (data: { playerOut: number }) => void): void {
+    this._socket.on('player-left', cb);
   }
 
   disconnect(): void {

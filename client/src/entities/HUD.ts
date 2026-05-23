@@ -8,6 +8,7 @@ export class HUD {
   private _names: Phaser.GameObjects.Text[] = [];
   private _roundText?: Phaser.GameObjects.Text;
   private _winnerText?: Phaser.GameObjects.Text;
+  private _timerText?: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene, fighters: Fighter[]) {
     this._scene = scene;
@@ -27,6 +28,27 @@ export class HUD {
         }).setOrigin(0, 0),
       );
     }
+    this._timerText = scene.add.text(300, 12, '99', {
+      fontFamily: 'monospace',
+      fontSize: '20px',
+      color: '#ffffff',
+      fontStyle: 'bold',
+    }).setOrigin(0.5, 0).setDepth(100);
+  }
+
+  updateTimer(seconds: number): void {
+    if (this._timerText) {
+      this._timerText.setText(String(seconds));
+      this._timerText.setColor(seconds <= 10 ? '#ff0000' : '#ffffff');
+    }
+  }
+
+  showTimer(): void {
+    if (this._timerText) this._timerText.setVisible(true);
+  }
+
+  hideTimer(): void {
+    if (this._timerText) this._timerText.setVisible(false);
   }
 
   updateHealth(fighters: Fighter[]): void {
@@ -85,5 +107,6 @@ export class HUD {
     this._bars.forEach((b) => { b.bg.destroy(); b.fill.destroy(); });
     this._names.forEach((n) => n.destroy());
     this._clearTexts();
+    this._timerText?.destroy();
   }
 }

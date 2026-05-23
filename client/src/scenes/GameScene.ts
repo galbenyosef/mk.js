@@ -20,6 +20,8 @@ export class GameScene extends Phaser.Scene {
   public roundWins: [number, number] = [0, 0];
   public currentRound = 0;
   public options!: GameOptions;
+  private _roundTimeLeft = 99;
+  private _roundTimerEvent?: Phaser.Time.TimerEvent;
 
   constructor() {
     super({ key: 'Game' });
@@ -162,6 +164,28 @@ export class GameScene extends Phaser.Scene {
     this.arena.syncFighters(this.fighters[0], this.fighters[1]);
     this.hud.updateHealth(this.fighters);
 
+    this._roundTimeLeft = 99;
+    this.hud.showTimer();
+    this.hud.updateTimer(this._roundTimeLeft);
+    if (this._roundTimerEvent) this._roundTimerEvent.destroy();
+    this._roundTimerEvent = this.time.addEvent({
+      delay: 1000,
+      repeat: 98,
+      callback: () => {
+        this._roundTimeLeft--;
+        this.hud.updateTimer(this._roundTimeLeft);
+        if (this._roundTimeLeft <= 0) {
+          this._roundTimerEvent?.destroy();
+          if (this.fighters[0].hp !== this.fighters[1].hp) {
+            const winnerIdx = this.fighters[0].hp > this.fighters[1].hp ? 0 : 1;
+            this.endRound(winnerIdx);
+          } else {
+            this.endRound(0);
+          }
+        }
+      },
+    });
+
     this.hud.showRound(round);
     this.time.delayedCall(1500, () => {
       this.hud.showFight();
@@ -173,6 +197,8 @@ export class GameScene extends Phaser.Scene {
 
   private endRound(winnerIndex: number): void {
     this.roundActive = false;
+    if (this._roundTimerEvent) this._roundTimerEvent.destroy();
+    this.hud.hideTimer();
     const loserIndex = winnerIndex === 0 ? 1 : 0;
     this.fighters[winnerIndex].trySetMove(MoveType.WIN, true);
     this.fighters[loserIndex].trySetMove(MoveType.FALL, true);

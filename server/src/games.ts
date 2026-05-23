@@ -43,7 +43,10 @@ export class Game {
   endGame(playerOut: number): void {
     if (!this._players.length) return;
     const opponent = this._players[1 - playerOut];
-    if (opponent && opponent.connected) opponent.disconnect();
+    if (opponent && opponent.connected) {
+      opponent.emit('player-left', { playerOut });
+      opponent.disconnect();
+    }
     this._players = [];
     this._collection.removeGame(this._id);
   }

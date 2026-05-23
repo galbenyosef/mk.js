@@ -25,6 +25,7 @@ export function setupLobby(io: Server): void {
       if (!game) {
         if (ack) ack({ success: false, error: 'GAME_NOT_EXISTS' });
       } else if (game.addPlayer(socket, data.fighterName || 'kano')) {
+        game.players[0]?.emit('player-joined', { fighterName: data.fighterName || 'kano' });
         game.players.forEach(p => p.emit('game-ready', { opponentName: data.fighterName || 'kano', arena: game.arena }));
         if (ack) ack({ success: true });
       } else {

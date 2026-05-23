@@ -50,6 +50,24 @@ export interface GameReadyInfo {
   playerIndex: number;
 }
 
+export interface FighterState {
+  playerIndex: number;
+  hp: number;
+  x: number;
+  y: number;
+  currentMove: MoveType;
+  orientation: 'left' | 'right';
+  locked: boolean;
+}
+
+export interface GameState {
+  round: number;
+  roundActive: boolean;
+  roundWins: [number, number];
+  timeRemaining: number;
+  fighters: [FighterState, FighterState];
+}
+
 export type GameEvent =
   | { type: 'PLAYER_JOINED'; playerName: string }
   | { type: 'PLAYER_LEFT'; playerName: string }

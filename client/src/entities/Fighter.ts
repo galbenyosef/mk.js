@@ -64,13 +64,29 @@ export class Fighter extends Phaser.GameObjects.Sprite {
   }
 
   takeDamage(damage: number, attackType: MoveType): void {
+    const isBlocking = this.currentMove === MoveType.BLOCK || this.currentMove === MoveType.SQUAT;
+    const isLowAttack = [
+      MoveType.LOW_PUNCH, MoveType.LOW_KICK,
+      MoveType.SQUAT_LOW_KICK, MoveType.SQUAT_HIGH_KICK,
+      MoveType.SQUAT_LOW_PUNCH,
+    ].includes(attackType);
+
     if (this.currentMove === MoveType.BLOCK) {
       damage = Math.round(damage * CONFIG.BLOCK_DAMAGE);
+    } else if (this.currentMove === MoveType.SQUAT) {
+      if (isLowAttack) {
+        damage = Math.round(damage * CONFIG.BLOCK_DAMAGE);
+      } else {
+        this.locked = false;
+        if (attackType === MoveType.UPPERCUT || attackType === MoveType.SPIN_KICK) {
+          this.trySetMove(MoveType.KNOCK_DOWN, true);
+        } else {
+          this.trySetMove(MoveType.ENDURE, true);
+        }
+      }
     } else {
       this.locked = false;
-      if (this.currentMove === MoveType.SQUAT) {
-        this.trySetMove(MoveType.SQUAT_ENDURE, true);
-      } else if (attackType === MoveType.UPPERCUT || attackType === MoveType.SPIN_KICK) {
+      if (attackType === MoveType.UPPERCUT || attackType === MoveType.SPIN_KICK) {
         this.trySetMove(MoveType.KNOCK_DOWN, true);
       } else {
         this.trySetMove(MoveType.ENDURE, true);

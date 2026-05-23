@@ -81,6 +81,14 @@ export class LobbyScene extends Phaser.Scene {
       } catch { this._statusText.setText('Error: game not found or full'); }
     });
 
+    this._socket.onPlayerJoined((data) => {
+      this._statusText.setText(`${data.fighterName} joined!`);
+    });
+
+    this._socket.onPlayerLeft(() => {
+      this._statusText.setText('Opponent disconnected');
+    });
+
     this._socket.onGameReady(() => {
       const options: GameOptions = {
         mode: 'network',
