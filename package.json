@@ -1,0 +1,22 @@
+{
+  "name": "mk.js",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "echo 'no dev script configured yet'",
+    "build": "npm run build --workspaces",
+    "build:assets": "echo 'no assets to build yet'",
+    "start:server": "echo 'no server to start yet'",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
