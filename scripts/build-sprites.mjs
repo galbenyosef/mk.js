@@ -4,13 +4,12 @@ import sharp from 'sharp';
 
 const RAW_DIR = 'assets/raw';
 const BUILD_DIR = 'assets/build';
+const MAX_WIDTH = 2048; // WebGL safe max texture width
 
 async function buildSpritesheet(fighterName) {
   const fighterDir = path.join(RAW_DIR, fighterName);
   const categories = await fs.readdir(fighterDir);
   const allFrames = [];
-  let totalWidth = 0;
-  let maxHeight = 0;
 
   for (const category of categories) {
     const catDir = path.join(fighterDir, category);
@@ -27,8 +26,6 @@ async function buildSpritesheet(fighterName) {
         width: meta.width,
         height: meta.height,
       });
-      totalWidth += meta.width;
-      maxHeight = Math.max(maxHeight, meta.height);
     }
   }
 
@@ -37,13 +34,32 @@ async function buildSpritesheet(fighterName) {
     return;
   }
 
-  const buffers = await Promise.all(
-    allFrames.map(f => sharp(f.path).toBuffer())
-  );
-  const composite = buffers.map((buf, i) => ({
-    input: buf,
-    top: 0,
-    left: allFrames.slice(0, i).reduce((acc, f) => acc + f.width, 0),
+  // Arrange frames in a grid that fits within MAX_WIDTH
+  const placements = [];
+  let curX = 0;
+  let curY = 0;
+  let rowHeight = 0;
+
+  for (const f of allFrames) {
+    if (curX + f.width > MAX_WIDTH) {
+      // Start a new row
+      curX = 0;
+      curY += rowHeight;
+      rowHeight = 0;
+    }
+    placements.push({ frame: f, x: curX, y: curY });
+    curX += f.width;
+    rowHeight = Math.max(rowHeight, f.height);
+  }
+
+  const totalWidth = Math.min(MAX_WIDTH, placements.reduce((max, p) => Math.max(max, p.x + p.frame.width), 0));
+  const totalHeight = curY + rowHeight;
+
+  const buffers = await Promise.all(allFrames.map(f => sharp(f.path).toBuffer()));
+  const composite = placements.map((p, i) => ({
+    input: buffers[i],
+    top: p.y,
+    left: p.x,
   }));
 
   const outDir = path.join(BUILD_DIR, fighterName);
@@ -52,7 +68,7 @@ async function buildSpritesheet(fighterName) {
   await sharp({
     create: {
       width: totalWidth,
-      height: maxHeight,
+      height: totalHeight,
       channels: 4,
       background: { r: 0, g: 0, b: 0, alpha: 0 },
     },
@@ -61,33 +77,29 @@ async function buildSpritesheet(fighterName) {
     .png()
     .toFile(path.join(outDir, 'spritesheet.png'));
 
-  let x = 0;
+  // Build atlas JSON with correct positions
   const frames = {};
-  for (const f of allFrames) {
-    frames[f.name] = {
-      frame: { x, y: 0, w: f.width, h: f.height },
+  for (const p of placements) {
+    frames[p.frame.name] = {
+      frame: { x: p.x, y: p.y, w: p.frame.width, h: p.frame.height },
       rotated: false,
       trimmed: false,
-      spriteSourceSize: { x: 0, y: 0, w: f.width, h: f.height },
-      sourceSize: { w: f.width, h: f.height },
+      spriteSourceSize: { x: 0, y: 0, w: p.frame.width, h: p.frame.height },
+      sourceSize: { w: p.frame.width, h: p.frame.height },
     };
-    x += f.width;
   }
 
   const atlas = {
     meta: {
       image: 'spritesheet.png',
-      size: { w: totalWidth, h: maxHeight },
+      size: { w: totalWidth, h: totalHeight },
       scale: 1,
     },
     frames,
   };
 
-  await fs.writeFile(
-    path.join(outDir, 'spritesheet.json'),
-    JSON.stringify(atlas, null, 2),
-  );
-  console.log(`Built spritesheet for ${fighterName}: ${allFrames.length} frames`);
+  await fs.writeFile(path.join(outDir, 'spritesheet.json'), JSON.stringify(atlas, null, 2));
+  console.log(`Built spritesheet for ${fighterName}: ${allFrames.length} frames (${totalWidth}x${totalHeight})`);
 }
 
 async function main() {

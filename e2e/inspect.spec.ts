@@ -73,4 +73,7 @@ test('debug createAnimations', async ({ page }) => {
 
   console.log(JSON.stringify(result, null, 2));
   expect(result.sceneAnimExists).toBe(true);
+
+  const webGLErrors = logs.filter(l => l.includes('texImage2D') || l.includes('width or height out of range'));
+  expect(webGLErrors).toHaveLength(0);
 });
