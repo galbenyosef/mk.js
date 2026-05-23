@@ -51,6 +51,7 @@ export class HUD {
   }
 
   showFight(): void {
+    this._clearTexts();
     this._roundText = this._scene.add.text(300, 200, 'FIGHT!', {
       fontFamily: 'monospace',
       fontSize: '28px',
