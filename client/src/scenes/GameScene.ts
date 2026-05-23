@@ -69,6 +69,7 @@ export class GameScene extends Phaser.Scene {
     if (!this.roundActive) return;
 
     this.controller.update();
+    if (this.options.mode === 'ai') this._processP1Keyboard();
 
     for (const f of this.fighters) {
       const config = getMoveConfig(f.currentMove);
@@ -89,27 +90,25 @@ export class GameScene extends Phaser.Scene {
 
   private _pressed: Record<number, boolean> = {};
   private _addPlayer1Keyboard(): void {
-    const keys = { HP: 65, LP: 83, LK: 68, HK: 70, BLOCK: 16, RIGHT: 74, LEFT: 71, UP: 89, DOWN: 72 };
+    const k = { HP: 76, LP: 74, LK: 75, HK: 186, BLOCK: 32, RIGHT: 68, LEFT: 65, UP: 87, DOWN: 83, UPPERCUT: 85 };
     this.input.keyboard!.on('keydown', (e: KeyboardEvent) => {
+      if (e.repeat) return;
       this._pressed[e.keyCode] = true;
-      const move = this._getP1Move();
-      if (move) this.fighters[0].trySetMove(move);
     });
     this.input.keyboard!.on('keyup', (e: KeyboardEvent) => {
       delete this._pressed[e.keyCode];
-      const move = this._getP1Move();
-      if (move) this.fighters[0].trySetMove(move);
-      if (Object.keys(this._pressed).length === 0) this.fighters[0].trySetMove(MoveType.STAND);
     });
+  }
+
+  private _processP1Keyboard(): void {
+    const move = this._getP1Move();
+    if (move) this.fighters[0].trySetMove(move);
   }
 
   private _getP1Move(): MoveType | undefined {
     const p = this._pressed;
-    const k = { HP: 65, LP: 83, LK: 68, HK: 70, BLOCK: 16, RIGHT: 74, LEFT: 71, UP: 89, DOWN: 72 };
+    const k = { HP: 76, LP: 74, LK: 75, HK: 186, BLOCK: 32, RIGHT: 68, LEFT: 65, UP: 87, DOWN: 83, UPPERCUT: 85 };
     const m = MoveType;
-    const f = this.fighters[0];
-    if (f.currentMove === m.SQUAT && !p[k.DOWN]) return m.STAND_UP;
-    if (f.currentMove === m.BLOCK && !p[k.BLOCK]) return m.STAND;
     if (Object.keys(p).length === 0) return m.STAND;
     if (p[k.BLOCK]) return m.BLOCK;
     if (p[k.LEFT]) {
@@ -121,7 +120,7 @@ export class GameScene extends Phaser.Scene {
       return m.WALK;
     }
     if (p[k.DOWN]) {
-      if (p[k.HP]) return m.UPPERCUT;
+      if (p[k.UPPERCUT]) return m.UPPERCUT;
       if (p[k.LK]) return m.SQUAT_LOW_KICK;
       if (p[k.HK]) return m.SQUAT_HIGH_KICK;
       if (p[k.LP]) return m.SQUAT_LOW_PUNCH;

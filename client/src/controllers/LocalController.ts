@@ -7,8 +7,8 @@ import type { BaseController } from './BaseController.js';
 import { getMoveConfig } from '../moves/MoveRegistry.js';
 
 const P1_KEYS: KeyConfig = {
-  RIGHT: 74, LEFT: 71, UP: 89, DOWN: 72,
-  BLOCK: 16, HP: 65, LP: 83, LK: 68, HK: 70,
+  RIGHT: 68, LEFT: 65, UP: 87, DOWN: 83,
+  BLOCK: 32, HP: 76, LP: 74, LK: 75, HK: 186,
 };
 
 const P2_KEYS: KeyConfig = {
@@ -25,6 +25,7 @@ export class LocalController implements BaseController {
     private _gameScene: GameScene,
   ) {
     this._scene.input.keyboard!.on('keydown', (event: KeyboardEvent) => {
+      if (event.repeat) return;
       for (let p = 0; p < 2; p++) {
         this._input[p].set(event.keyCode, true);
         const move = this._getMove(this._input[p], p === 0 ? P1_KEYS : P2_KEYS, this._fighters[p]);

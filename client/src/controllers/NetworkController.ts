@@ -4,8 +4,9 @@ import { GameSocket } from '../networking/GameSocket.js';
 import type { BaseController } from './BaseController.js';
 
 const P1_KEYS = {
-  RIGHT: 74, LEFT: 71, UP: 89, DOWN: 72,
-  BLOCK: 16, HP: 65, LP: 83, LK: 68, HK: 70,
+  RIGHT: 68, LEFT: 65, UP: 87, DOWN: 83,
+  BLOCK: 32, HP: 76, LP: 74, LK: 75, HK: 186,
+  UPPERCUT: 85,
 };
 
 export class NetworkController implements BaseController {
@@ -40,6 +41,7 @@ export class NetworkController implements BaseController {
 
     const k = P1_KEYS;
     scene.input.keyboard!.on('keydown', (e: KeyboardEvent) => {
+      if (e.repeat) return;
       this._pressed[e.keyCode] = true;
       const move = this._getMove();
       if (move) {
@@ -91,9 +93,9 @@ export class NetworkController implements BaseController {
       if (p[k.UP]) return m.FORWARD_JUMP;
       return m.WALK;
     }
-    if (p[k.DOWN]) {
-      if (p[k.HP]) return m.UPPERCUT;
-      if (p[k.LK]) return m.SQUAT_LOW_KICK;
+      if (p[k.DOWN]) {
+        if (p[k.UPPERCUT]) return m.UPPERCUT;
+        if (p[k.LK]) return m.SQUAT_LOW_KICK;
       if (p[k.HK]) return m.SQUAT_HIGH_KICK;
       if (p[k.LP]) return m.SQUAT_LOW_PUNCH;
       return m.SQUAT;
