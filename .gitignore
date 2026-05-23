@@ -6,3 +6,4 @@ assets/raw/
 .playwright-cli/
 test-results/
 e2e/screenshots/
+*.zip

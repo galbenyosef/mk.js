@@ -148,6 +148,7 @@ export class GameScene extends Phaser.Scene {
     this._hasHit[attacker.playerIndex] = true;
     defender.takeDamage(config.damage, attacker.currentMove);
     this.hud.updateHealth(this.fighters);
+    try { this.sound.play('sfx/hit', { volume: 0.5 }); } catch {}
     if (defender.hp <= 0) {
       this.endRound(attacker.playerIndex);
     }
@@ -187,6 +188,7 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.hud.showRound(round);
+    try { this.sound.play('sfx/round', { volume: 0.4 }); } catch {}
     this.time.delayedCall(1500, () => {
       this.hud.showFight();
       this.time.delayedCall(800, () => {
@@ -205,6 +207,7 @@ export class GameScene extends Phaser.Scene {
     this.roundWins[winnerIndex]++;
 
     if (this.roundWins[winnerIndex] >= CONFIG.ROUND_WIN_REQUIRED) {
+      try { this.sound.play('sfx/win', { volume: 0.5 }); } catch {}
       this.hud.showWinner(this.fighters[winnerIndex].fighterName);
       this.time.delayedCall(3000, () => {
         this.scene.start('Menu');

@@ -29,6 +29,7 @@ export class MenuScene extends Phaser.Scene {
       btn.on('pointerover', () => btn.setColor('#ffff00'));
       btn.on('pointerout', () => btn.setColor('#ffffff'));
       btn.on('pointerdown', () => {
+        try { this.sound.play('sfx/select', { volume: 0.4 }); } catch {}
         if (mode === 'network') {
           this.scene.start('Lobby');
         } else {
