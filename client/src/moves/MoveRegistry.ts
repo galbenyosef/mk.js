@@ -90,5 +90,5 @@ export function createAnimations(scene: Phaser.Scene, fighterName: string, atlas
     });
     created++;
   }
-  console.log(`[mk.js] Created ${created} animations for ${fighterName} (${atlasKey}) total:${scene.anims.anims.size}`);
+  console.log(`[mk.js] Created ${created} animations for ${fighterName} (${atlasKey})`);
 }
