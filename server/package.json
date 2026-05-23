@@ -1,11 +1,22 @@
 {
-    "name": "mk.js-server",
-    "version": "0.0.1",
-    "author": "Minko Gechev @mgechev",
-    "description": "Node.js server for mk.js",
-    "dependencies": {
-        "express": "3.x.x",
-        "socket.io": "0.9.x"
-    },
-    "license": "MIT"
+  "name": "@mk.js/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "socket.io": "^4.8.0",
+    "@mk.js/shared": "*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0"
+  }
 }
