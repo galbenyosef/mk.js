@@ -49,6 +49,7 @@ export class GameScene extends Phaser.Scene {
         break;
       case 'ai':
         this.controller = new AIController(this, this.fighters, this);
+        this._addPlayer1Keyboard();
         break;
       case 'network':
         this.controller = new NetworkController(this, this.fighters, this, this.options.isHost ?? false);
@@ -62,6 +63,14 @@ export class GameScene extends Phaser.Scene {
     if (!this.roundActive) return;
 
     this.controller.update();
+
+    for (const f of this.fighters) {
+      const config = getMoveConfig(f.currentMove);
+      if (config.velocityX) {
+        f.x += config.velocityX;
+      }
+    }
+
     this.arena.syncFighters(this.fighters[0], this.fighters[1]);
 
     for (const f of this.fighters) {
@@ -73,22 +82,74 @@ export class GameScene extends Phaser.Scene {
     this.checkHit(this.fighters[1], this.fighters[0]);
   }
 
+  private _pressed: Record<number, boolean> = {};
+  private _addPlayer1Keyboard(): void {
+    const keys = { HP: 65, LP: 83, LK: 68, HK: 70, BLOCK: 16, RIGHT: 74, LEFT: 71, UP: 89, DOWN: 72 };
+    this.input.keyboard!.on('keydown', (e: KeyboardEvent) => {
+      this._pressed[e.keyCode] = true;
+      const move = this._getP1Move();
+      if (move) this.fighters[0].trySetMove(move);
+    });
+    this.input.keyboard!.on('keyup', (e: KeyboardEvent) => {
+      delete this._pressed[e.keyCode];
+      const move = this._getP1Move();
+      if (move) this.fighters[0].trySetMove(move);
+      if (Object.keys(this._pressed).length === 0) this.fighters[0].trySetMove(MoveType.STAND);
+    });
+  }
+
+  private _getP1Move(): MoveType | undefined {
+    const p = this._pressed;
+    const k = { HP: 65, LP: 83, LK: 68, HK: 70, BLOCK: 16, RIGHT: 74, LEFT: 71, UP: 89, DOWN: 72 };
+    const m = MoveType;
+    const f = this.fighters[0];
+    if (f.currentMove === m.SQUAT && !p[k.DOWN]) return m.STAND_UP;
+    if (f.currentMove === m.BLOCK && !p[k.BLOCK]) return m.STAND;
+    if (Object.keys(p).length === 0) return m.STAND;
+    if (p[k.BLOCK]) return m.BLOCK;
+    if (p[k.LEFT]) {
+      if (p[k.UP]) return m.BACKWARD_JUMP;
+      return m.WALK_BACKWARD;
+    }
+    if (p[k.RIGHT]) {
+      if (p[k.UP]) return m.FORWARD_JUMP;
+      return m.WALK;
+    }
+    if (p[k.DOWN]) {
+      if (p[k.HP]) return m.UPPERCUT;
+      if (p[k.LK]) return m.SQUAT_LOW_KICK;
+      if (p[k.HK]) return m.SQUAT_HIGH_KICK;
+      if (p[k.LP]) return m.SQUAT_LOW_PUNCH;
+      return m.SQUAT;
+    }
+    if (p[k.HK]) return m.HIGH_KICK;
+    if (p[k.LK]) return m.LOW_KICK;
+    if (p[k.UP]) return m.JUMP;
+    if (p[k.LP]) return m.LOW_PUNCH;
+    if (p[k.HP]) return m.HIGH_PUNCH;
+    return undefined;
+  }
+
+  private _hitLog = new Set<string>();
+
   private checkHit(attacker: Fighter, defender: Fighter): void {
     const config = getMoveConfig(attacker.currentMove);
-    if (config.damage > 0 && config.hitFrame >= 0) {
-      if (attacker.anims.currentFrame?.index === config.hitFrame && this.arena.blockOverlap(attacker, defender)) {
-        defender.takeDamage(config.damage, attacker.currentMove);
-        this.hud.updateHealth(this.fighters);
-        if (defender.hp <= 0) {
-          this.endRound(attacker.playerIndex);
-        }
-      }
+    if (config.damage <= 0) return;
+    const hitId = `${attacker.playerIndex}-${attacker.currentMove}`;
+    if (this._hitLog.has(hitId)) return;
+    if (!this.arena.blockOverlap(attacker, defender)) return;
+    this._hitLog.add(hitId);
+    defender.takeDamage(config.damage, attacker.currentMove);
+    this.hud.updateHealth(this.fighters);
+    if (defender.hp <= 0) {
+      this.endRound(attacker.playerIndex);
     }
   }
 
   private startRound(round: number): void {
     this.currentRound = round;
     this.roundActive = false;
+    this._hitLog.clear();
 
     this.fighters[0].reset();
     this.fighters[1].reset();

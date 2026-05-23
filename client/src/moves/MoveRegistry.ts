@@ -49,32 +49,38 @@ export function getMoveConfig(type: MoveType): MoveDef {
   return MOVE_DEFS.find((m) => m.type === type) ?? MOVE_DEFS[0];
 }
 
+function getCategoryFrameNames(texture: Phaser.Textures.Texture, atlasKey: string, category: string): Phaser.Types.Animations.AnimationFrame[] {
+  const names = texture.getFrameNames().filter((n) => n.startsWith(`${category}/`));
+  if (names.length === 0) return [];
+
+  names.sort((a, b) => {
+    const numA = parseInt(a.replace(`${category}/`, ''), 10);
+    const numB = parseInt(b.replace(`${category}/`, ''), 10);
+    return numA - numB;
+  });
+
+  return names.map((name) => ({ key: atlasKey, frame: name }));
+}
+
 export function createAnimations(scene: Phaser.Scene, fighterName: string, atlasKey: string): void {
   const texture = scene.textures.get(atlasKey);
   if (!texture || !texture.key) {
-    console.warn(`Texture not found: ${atlasKey}`);
+    console.warn(`[mk.js] Texture not found: ${atlasKey}`);
     return;
   }
 
-  const frm = texture.frames as Record<string, unknown>;
-
+  let created = 0;
   for (const def of MOVE_DEFS) {
     const animKey = `${fighterName}_${def.type}`;
-    const category = MOVE_CATEGORY[def.type] || def.type;
-    const frames: Phaser.Types.Animations.AnimationFrame[] = [];
-    let idx = 0;
-    while (frm[`${category}/${String(idx).padStart(2, '0')}`]) {
-      frames.push({ key: atlasKey, frame: `${category}/${String(idx).padStart(2, '0')}` });
-      idx++;
-    }
-    if (frames.length === 0) {
-      let i = 1;
-      while (frm[`${category}/${i}`]) {
-        frames.push({ key: atlasKey, frame: `${category}/${i}` });
-        i++;
-      }
-    }
+    const category = MOVE_CATEGORY[def.type];
+    if (!category) continue;
+    const frames = getCategoryFrameNames(texture, atlasKey, category);
     if (frames.length === 0) continue;
+
+    if (scene.anims.exists(animKey)) {
+      created++;
+      continue;
+    }
 
     scene.anims.create({
       key: animKey,
@@ -82,19 +88,7 @@ export function createAnimations(scene: Phaser.Scene, fighterName: string, atlas
       frameRate: Math.round(1000 / def.duration),
       repeat: def.locksPlayer ? 0 : -1,
     });
+    created++;
   }
-
-  const standKey = `${fighterName}_${MoveType.STAND}`;
-  if (!scene.anims.exists(standKey)) {
-    const cat = MOVE_CATEGORY[MoveType.STAND] || MoveType.STAND;
-    const frames: Phaser.Types.Animations.AnimationFrame[] = [];
-    let idx = 0;
-    while (frm[`${cat}/${String(idx).padStart(2, '0')}`]) {
-      frames.push({ key: atlasKey, frame: `${cat}/${String(idx).padStart(2, '0')}` });
-      idx++;
-    }
-    if (frames.length > 0) {
-      scene.anims.create({ key: standKey, frames, frameRate: 1, repeat: -1 });
-    }
-  }
+  console.log(`[mk.js] Created ${created} animations for ${fighterName} (${atlasKey}) total:${scene.anims.anims.size}`);
 }

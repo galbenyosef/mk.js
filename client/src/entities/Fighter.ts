@@ -60,9 +60,6 @@ export class Fighter extends Phaser.GameObjects.Sprite {
       this.play(animKey);
     }
 
-    if (config.velocityX) {
-      this.x += config.velocityX;
-    }
     return true;
   }
 
