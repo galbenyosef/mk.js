@@ -83,11 +83,11 @@ export class GameCollection {
     return this._games.delete(id);
   }
 
-  listGames(): { id: string; playerCount: number }[] {
-    const result: { id: string; playerCount: number }[] = [];
-    for (const [id, game] of this._games) {
+  listGames(): { gameName: string; playerCount: number }[] {
+    const result: { gameName: string; playerCount: number }[] = [];
+    for (const [gameName, game] of this._games) {
       if (game.playerCount < 2) {
-        result.push({ id, playerCount: game.playerCount });
+        result.push({ gameName, playerCount: game.playerCount });
       }
     }
     return result;

@@ -27,7 +27,7 @@ describe('GameCollection', () => {
 
     const games = collection.listGames();
     expect(games).toHaveLength(1);
-    expect(games[0].id).toBe('game-1');
+    expect(games[0].gameName).toBe('game-1');
   });
 
   it('should remove a game', () => {
