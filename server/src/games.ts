@@ -1,66 +1,50 @@
 import type { Socket } from 'socket.io';
 
-export const Messages = {
-  EVENT: 'event',
-  LIFE_UPDATE: 'life-update',
-  POSITION_UPDATE: 'position-update',
-  PLAYER_CONNECTED: 'player-connected',
-} as const;
-
 export class Game {
   private _players: Socket[] = [];
+  private _id: string;
+  private _collection: GameCollection;
+  private _playerNames: string[] = [];
+  public arena = 'throne-room';
 
-  constructor(
-    private _id: string,
-    private _collection: GameCollection,
-  ) {}
-
-  get id(): string {
-    return this._id;
+  constructor(id: string, collection: GameCollection) {
+    this._id = id;
+    this._collection = collection;
   }
 
-  get playerCount(): number {
-    return this._players.length;
-  }
+  get id(): string { return this._id; }
+  get playerCount(): number { return this._players.length; }
+  get players(): Socket[] { return this._players; }
 
-  addPlayer(socket: Socket): boolean {
-    if (this._players.length > 1) return false;
+  addPlayer(socket: Socket, fighterName?: string): boolean {
+    if (this._players.length >= 2) return false;
     this._players.push(socket);
+    this._playerNames.push(fighterName || 'unknown');
     if (this._players.length === 1) {
       socket.on('disconnect', () => this.endGame(0));
-    } else {
+    }
+    if (this._players.length === 2) {
       this._addHandlers();
-      this._players[0].emit(Messages.PLAYER_CONNECTED, 0);
     }
     return true;
   }
 
   private _addHandlers(): void {
     const [p1, p2] = this._players;
-    const m = Messages;
-
-    const relay = (from: Socket, to: Socket) => {
-      from.on(m.EVENT, (data: unknown) => to.emit(m.EVENT, data));
-      from.on(m.LIFE_UPDATE, (data: unknown) => to.emit(m.LIFE_UPDATE, data));
-      from.on(m.POSITION_UPDATE, (data: unknown) => to.emit(m.POSITION_UPDATE, data));
-    };
-
-    relay(p1, p2);
-    relay(p2, p1);
-
-    p1.on('disconnect', () => this.endGame(0));
+    p1.on('event', (data: unknown) => p2.emit('event', data));
+    p1.on('life-update', (data: unknown) => p2.emit('life-update', data));
+    p1.on('position-update', (data: unknown) => p2.emit('position-update', data));
+    p2.on('event', (data: unknown) => p1.emit('event', data));
+    p2.on('life-update', (data: unknown) => p1.emit('life-update', data));
+    p2.on('position-update', (data: unknown) => p1.emit('position-update', data));
     p2.on('disconnect', () => this.endGame(1));
-
-    p1.emit('game-ready');
-    p2.emit('game-ready');
   }
 
   endGame(playerOut: number): void {
     if (!this._players.length) return;
-    const opponentIndex = playerOut === 0 ? 1 : 0;
-    const opponent = this._players[opponentIndex];
+    const opponent = this._players[1 - playerOut];
+    if (opponent && opponent.connected) opponent.disconnect();
     this._players = [];
-    if (opponent) opponent.disconnect();
     this._collection.removeGame(this._id);
   }
 }
@@ -83,11 +67,11 @@ export class GameCollection {
     return this._games.delete(id);
   }
 
-  listGames(): { gameName: string; playerCount: number }[] {
-    const result: { gameName: string; playerCount: number }[] = [];
+  listGames(): { gameName: string; playerCount: number; arena: string }[] {
+    const result: { gameName: string; playerCount: number; arena: string }[] = [];
     for (const [gameName, game] of this._games) {
       if (game.playerCount < 2) {
-        result.push({ gameName, playerCount: game.playerCount });
+        result.push({ gameName, playerCount: game.playerCount, arena: game.arena });
       }
     }
     return result;

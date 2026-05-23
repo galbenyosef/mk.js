@@ -30,7 +30,7 @@ export interface KeyConfig {
 }
 
 export interface GameOptions {
-  mode: 'local' | 'network' | 'ai';
+  mode: 'local' | 'network' | 'ai' | 'basic';
   p1Fighter: string;
   p2Fighter: string;
   arena: string;
@@ -41,6 +41,7 @@ export interface GameOptions {
 export interface GameInfo {
   gameName: string;
   playerCount: number;
+  arena: string;
 }
 
 export interface GameReadyInfo {

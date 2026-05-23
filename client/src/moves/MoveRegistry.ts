@@ -43,6 +43,12 @@ const MOVE_CATEGORY: Partial<Record<MoveType, string>> = {
   [MoveType.WIN]: 'victory',
   [MoveType.ENDURE]: 'beinghit',
   [MoveType.SQUAT_ENDURE]: 'beinghit',
+  [MoveType.STAND_UP]: 'stance',
+  [MoveType.ATTRACTIVE_STAND_UP]: 'stance',
+  [MoveType.FORWARD_JUMP_KICK]: 'duckjump',
+  [MoveType.BACKWARD_JUMP_KICK]: 'duckjump',
+  [MoveType.FORWARD_JUMP_PUNCH]: 'duckjump',
+  [MoveType.BACKWARD_JUMP_PUNCH]: 'duckjump',
 };
 
 export function getMoveConfig(type: MoveType): MoveDef {

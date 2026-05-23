@@ -8,6 +8,7 @@ import { createAnimations, getMoveConfig } from '../moves/MoveRegistry.js';
 import { LocalController } from '../controllers/LocalController.js';
 import { AIController } from '../controllers/AIController.js';
 import { NetworkController } from '../controllers/NetworkController.js';
+import { BasicController } from '../controllers/BasicController.js';
 import type { BaseController } from '../controllers/BaseController.js';
 
 export class GameScene extends Phaser.Scene {
@@ -54,6 +55,9 @@ export class GameScene extends Phaser.Scene {
       case 'network':
         this.controller = new NetworkController(this, this.fighters, this, this.options.isHost ?? false);
         break;
+      case 'basic':
+        this.controller = new BasicController(this, this.fighters, this);
+        break;
     }
 
     this.startRound(1);
@@ -66,9 +70,8 @@ export class GameScene extends Phaser.Scene {
 
     for (const f of this.fighters) {
       const config = getMoveConfig(f.currentMove);
-      if (config.velocityX) {
-        f.x += config.velocityX;
-      }
+      if (config.velocityX) f.x += config.velocityX;
+      if (config.velocityY) f.y += config.velocityY;
     }
 
     this.arena.syncFighters(this.fighters[0], this.fighters[1]);
@@ -130,15 +133,17 @@ export class GameScene extends Phaser.Scene {
     return undefined;
   }
 
-  private _hitLog = new Set<string>();
+  private _hasHit: [boolean, boolean] = [false, false];
 
   private checkHit(attacker: Fighter, defender: Fighter): void {
     const config = getMoveConfig(attacker.currentMove);
-    if (config.damage <= 0) return;
-    const hitId = `${attacker.playerIndex}-${attacker.currentMove}`;
-    if (this._hitLog.has(hitId)) return;
+    if (config.damage <= 0) {
+      this._hasHit[attacker.playerIndex] = false;
+      return;
+    }
+    if (this._hasHit[attacker.playerIndex]) return;
     if (!this.arena.blockOverlap(attacker, defender)) return;
-    this._hitLog.add(hitId);
+    this._hasHit[attacker.playerIndex] = true;
     defender.takeDamage(config.damage, attacker.currentMove);
     this.hud.updateHealth(this.fighters);
     if (defender.hp <= 0) {
@@ -149,7 +154,6 @@ export class GameScene extends Phaser.Scene {
   private startRound(round: number): void {
     this.currentRound = round;
     this.roundActive = false;
-    this._hitLog.clear();
 
     this.fighters[0].reset();
     this.fighters[1].reset();

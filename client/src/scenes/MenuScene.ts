@@ -13,6 +13,7 @@ export class MenuScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     const modes: { label: string; mode: GameOptions['mode'] }[] = [
+      { label: '1 PLAYER BASIC', mode: 'basic' },
       { label: '1 PLAYER VS AI', mode: 'ai' },
       { label: '2 PLAYERS LOCAL', mode: 'local' },
       { label: 'NETWORK MULTIPLAYER', mode: 'network' },
