@@ -2,6 +2,29 @@ import Phaser from 'phaser';
 import { MoveType, CONFIG } from '@mk.js/shared';
 import { getMoveConfig } from '../moves/MoveRegistry.js';
 
+// Map MoveType to a fallback frame name in the spritesheet
+const FALLBACK_FRAME: Partial<Record<MoveType, string>> = {
+  [MoveType.STAND]: 'stance/01',
+  [MoveType.WALK]: 'walk/01',
+  [MoveType.WALK_BACKWARD]: 'walk/01',
+  [MoveType.SQUAT]: 'duckjump/d01',
+  [MoveType.BLOCK]: 'block/01',
+  [MoveType.HIGH_PUNCH]: 'punch/01',
+  [MoveType.LOW_PUNCH]: 'punch/01',
+  [MoveType.HIGH_KICK]: 'kick/01',
+  [MoveType.LOW_KICK]: 'kick/01',
+  [MoveType.UPPERCUT]: 'punch/u01',
+  [MoveType.SPIN_KICK]: 'kick/r01',
+  [MoveType.JUMP]: 'duckjump/j01',
+  [MoveType.FORWARD_JUMP]: 'duckjump/f01',
+  [MoveType.BACKWARD_JUMP]: 'duckjump/j01',
+  [MoveType.FALL]: 'fall/01',
+  [MoveType.KNOCK_DOWN]: 'fall/01',
+  [MoveType.WIN]: 'victory/01',
+  [MoveType.ENDURE]: 'beinghit/01',
+  [MoveType.SQUAT_ENDURE]: 'beinghit/s01',
+};
+
 export class Fighter extends Phaser.GameObjects.Sprite {
   public playerIndex: number;
   public hp: number;
@@ -25,6 +48,9 @@ export class Fighter extends Phaser.GameObjects.Sprite {
     scene.add.existing(this);
     this.setOrigin(0.5, 1);
     this.setFlipX(orientation === 'right');
+
+    // Set proper initial frame — avoids showing __BASE (whole spritesheet squashed)
+    try { this.setFrame('stance/01'); } catch {}
 
     this.on('animationcomplete', (anim: Phaser.Animations.Animation) => {
       if (this.locked) {
@@ -51,20 +77,25 @@ export class Fighter extends Phaser.GameObjects.Sprite {
     if (this.locked && type !== MoveType.WIN) return false;
     if (!force && this.currentMove === type) return false;
 
-    const config = getMoveConfig(type);
     this.currentMove = type;
+    const config = getMoveConfig(type);
     this.locked = config.locksPlayer;
 
     const animKey = `${this.fighterName}_${type}`;
     if (this.scene.anims.exists(animKey)) {
       this.play(animKey);
+    } else {
+      // Fallback: show a static frame so we never see __BASE
+      const fallback = FALLBACK_FRAME[type];
+      if (fallback) {
+        try { this.setFrame(fallback); } catch {}
+      }
     }
 
     return true;
   }
 
   takeDamage(damage: number, attackType: MoveType): void {
-    const isBlocking = this.currentMove === MoveType.BLOCK || this.currentMove === MoveType.SQUAT;
     const isLowAttack = [
       MoveType.LOW_PUNCH, MoveType.LOW_KICK,
       MoveType.SQUAT_LOW_KICK, MoveType.SQUAT_HIGH_KICK,
@@ -78,19 +109,15 @@ export class Fighter extends Phaser.GameObjects.Sprite {
         damage = Math.round(damage * CONFIG.BLOCK_DAMAGE);
       } else {
         this.locked = false;
-        if (attackType === MoveType.UPPERCUT || attackType === MoveType.SPIN_KICK) {
-          this.trySetMove(MoveType.KNOCK_DOWN, true);
-        } else {
-          this.trySetMove(MoveType.ENDURE, true);
-        }
+        this.trySetMove(
+          attackType === MoveType.UPPERCUT || attackType === MoveType.SPIN_KICK
+            ? MoveType.KNOCK_DOWN : MoveType.ENDURE, true);
       }
     } else {
       this.locked = false;
-      if (attackType === MoveType.UPPERCUT || attackType === MoveType.SPIN_KICK) {
-        this.trySetMove(MoveType.KNOCK_DOWN, true);
-      } else {
-        this.trySetMove(MoveType.ENDURE, true);
-      }
+      this.trySetMove(
+        attackType === MoveType.UPPERCUT || attackType === MoveType.SPIN_KICK
+          ? MoveType.KNOCK_DOWN : MoveType.ENDURE, true);
     }
     this.hp = Math.max(0, this.hp - damage);
   }

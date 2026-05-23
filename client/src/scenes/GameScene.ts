@@ -72,8 +72,8 @@ export class GameScene extends Phaser.Scene {
 
     for (const f of this.fighters) {
       const config = getMoveConfig(f.currentMove);
-      if (config.velocityX) f.x += config.velocityX;
-      if (config.velocityY) f.y += config.velocityY;
+      if (config.velocityX) f.x += config.velocityX * (delta / 16.667);
+      if (config.velocityY) f.y += config.velocityY * (delta / 16.667);
     }
 
     this.arena.syncFighters(this.fighters[0], this.fighters[1]);
