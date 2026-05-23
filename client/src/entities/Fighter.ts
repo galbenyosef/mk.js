@@ -41,16 +41,13 @@ export class Fighter extends Phaser.GameObjects.Sprite {
     orientation: 'left' | 'right',
     atlasKey: string = `fighters/${fighterName}`,
   ) {
-    super(scene, x, y, atlasKey);
+    super(scene, x, y, atlasKey, 'stance/01');
     this.playerIndex = playerIndex;
     this._orientation = orientation;
     this.hp = CONFIG.STARTING_HP;
     scene.add.existing(this);
     this.setOrigin(0.5, 1);
     this.setFlipX(orientation === 'right');
-
-    // Set proper initial frame — avoids showing __BASE (whole spritesheet squashed)
-    try { this.setFrame('stance/01'); } catch {}
 
     this.on('animationcomplete', (anim: Phaser.Animations.Animation) => {
       if (this.locked) {

@@ -30,12 +30,12 @@ describe('getMoveConfig', () => {
 
   it('returns WALK config with positive velocity', () => {
     const cfg = getMoveConfig(MoveType.WALK);
-    expect(cfg.velocityX).toBe(5);
+    expect(cfg.velocityX).toBe(2);
   });
 
   it('returns WALK_BACKWARD config with negative velocity', () => {
     const cfg = getMoveConfig(MoveType.WALK_BACKWARD);
-    expect(cfg.velocityX).toBe(-5);
+    expect(cfg.velocityX).toBe(-2);
   });
 
   it('defaults to STAND for unknown type', () => {

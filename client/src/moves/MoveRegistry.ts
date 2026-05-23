@@ -6,8 +6,8 @@ type MoveDef = Omit<MoveConfig, 'type' | 'animationKey'> & { type: MoveType };
 
 const MOVE_DEFS: MoveDef[] = [
   { type: MoveType.STAND, damage: 0, duration: 80, hitFrame: -1, locksPlayer: false, returnTo: MoveType.STAND },
-  { type: MoveType.WALK, damage: 0, duration: 80, hitFrame: -1, locksPlayer: false, returnTo: MoveType.STAND, velocityX: 5 },
-  { type: MoveType.WALK_BACKWARD, damage: 0, duration: 80, hitFrame: -1, locksPlayer: false, returnTo: MoveType.STAND, velocityX: -5 },
+  { type: MoveType.WALK, damage: 0, duration: 80, hitFrame: -1, locksPlayer: false, returnTo: MoveType.STAND, velocityX: 2 },
+  { type: MoveType.WALK_BACKWARD, damage: 0, duration: 80, hitFrame: -1, locksPlayer: false, returnTo: MoveType.STAND, velocityX: -2 },
   { type: MoveType.SQUAT, damage: 0, duration: 40, hitFrame: -1, locksPlayer: false, returnTo: MoveType.STAND },
   { type: MoveType.BLOCK, damage: 0, duration: 40, hitFrame: -1, locksPlayer: false, returnTo: MoveType.STAND },
   { type: MoveType.HIGH_PUNCH, damage: 8, duration: 40, hitFrame: 2, locksPlayer: true, returnTo: MoveType.STAND },
