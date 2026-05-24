@@ -1,0 +1,4 @@
+[
+  { "t": 0,    "key": "RIGHT", "action": "down" },
+  { "t": 500,  "key": "RIGHT", "action": "up" }
+]
