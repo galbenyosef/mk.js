@@ -8,3 +8,4 @@ test-results/
 e2e/screenshots/
 *.zip
 .env
+e2e/output/
