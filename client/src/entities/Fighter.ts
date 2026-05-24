@@ -36,6 +36,7 @@ export class Fighter extends Phaser.GameObjects.Sprite {
   public hp: number;
   public currentMove: MoveType = MoveType.STAND;
   public locked = false;
+  public jumpDescending = false;
   private _orientation: 'left' | 'right';
 
   constructor(
@@ -92,6 +93,19 @@ export class Fighter extends Phaser.GameObjects.Sprite {
       if (!allowed) return false;
     }
     if (!force && this.currentMove === type) return false;
+
+    const wasInJump = this.currentMove === MoveType.JUMP || this.currentMove === MoveType.FORWARD_JUMP
+      || this.currentMove === MoveType.BACKWARD_JUMP || this.currentMove === MoveType.FORWARD_JUMP_KICK
+      || this.currentMove === MoveType.BACKWARD_JUMP_KICK || this.currentMove === MoveType.FORWARD_JUMP_PUNCH
+      || this.currentMove === MoveType.BACKWARD_JUMP_PUNCH;
+    const isJump = type === MoveType.JUMP || type === MoveType.FORWARD_JUMP
+      || type === MoveType.BACKWARD_JUMP || type === MoveType.FORWARD_JUMP_KICK
+      || type === MoveType.BACKWARD_JUMP_KICK || type === MoveType.FORWARD_JUMP_PUNCH
+      || type === MoveType.BACKWARD_JUMP_PUNCH;
+
+    if (isJump && !wasInJump) {
+      this.jumpDescending = false;
+    }
 
     this.locked = false;
     this.currentMove = type;

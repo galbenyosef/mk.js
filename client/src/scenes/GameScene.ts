@@ -96,8 +96,13 @@ export class GameScene extends Phaser.Scene {
           MoveType.FORWARD_JUMP_KICK, MoveType.BACKWARD_JUMP_KICK,
           MoveType.FORWARD_JUMP_PUNCH, MoveType.BACKWARD_JUMP_PUNCH];
         if (jumpMoves.includes(f.currentMove)) {
-          const progress = f.anims.getProgress?.() ?? 0;
-          const vy = progress <= 0.5 ? -Math.abs(config.velocityY) : Math.abs(config.velocityY);
+          if (!f.jumpDescending) {
+            const progress = f.anims.getProgress?.() ?? 0;
+            if (progress > 0.5) {
+              f.jumpDescending = true;
+            }
+          }
+          const vy = f.jumpDescending ? Math.abs(config.velocityY) : -Math.abs(config.velocityY);
           f.y += vy * (delta / 16.667);
         } else {
           f.y += config.velocityY * (delta / 16.667);
