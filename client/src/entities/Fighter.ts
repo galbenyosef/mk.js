@@ -38,7 +38,13 @@ export const JUMP_TYPES = new Set([
 
 interface StepDef { dx: number; dy: number; }
 
-const STEP_CONFIGS: Partial<Record<MoveType, { duration: number; steps: StepDef[] }>> = {
+const STEP_CONFIGS: Partial<Record<MoveType, { duration: number; steps: StepDef[]; loop?: boolean }>> = {
+  [MoveType.WALK]: {
+    duration: 80, steps: [{ dx: 15, dy: 0 }], loop: true,
+  },
+  [MoveType.WALK_BACKWARD]: {
+    duration: 80, steps: [{ dx: -15, dy: 0 }], loop: true,
+  },
   [MoveType.FORWARD_JUMP]: {
     duration: 80,
     steps: [
@@ -78,8 +84,7 @@ export class Fighter extends Phaser.GameObjects.Sprite {
   private _stepIdx = 0;
   private _stepDefs: StepDef[] = [];
   private _stepDuration = 80;
-  // Non-steps moves (attacks, stance) use this accumulator for loop timing
-  private _stepAccum = 0;
+  private _stepLoop = false;
   private _orientation: 'left' | 'right';
 
   constructor(
@@ -141,16 +146,20 @@ export class Fighter extends Phaser.GameObjects.Sprite {
         }
       }
       if (this._stepIdx >= this._stepDefs.length) {
-        const cfg = getMoveConfig(this.currentMove);
-        this.locked = false;
-        this._stepDefs = [];
-        this._stepIdx = 0;
-        this._stepTimer = 0;
-        if (cfg.returnTo === MoveType.STAND) {
-          this.y = CONFIG.PLAYER_TOP;
+        if (this._stepLoop) {
+          this._stepIdx = 0;
+        } else {
+          const cfg = getMoveConfig(this.currentMove);
+          this.locked = false;
+          this._stepDefs = [];
+          this._stepIdx = 0;
+          this._stepTimer = 0;
+          if (cfg.returnTo === MoveType.STAND) {
+            this.y = CONFIG.PLAYER_TOP;
+          }
+          this.trySetMove(cfg.returnTo);
+          return;
         }
-        this.trySetMove(cfg.returnTo);
-        return;
       }
     }
   }
@@ -171,9 +180,10 @@ export class Fighter extends Phaser.GameObjects.Sprite {
     const cfg = STEP_CONFIGS[type];
     if (cfg) {
       this._stepDefs = cfg.steps;
-      this._stepDuration = 80;
+      this._stepDuration = cfg.duration;
       this._stepIdx = 0;
       this._stepTimer = 0;
+      this._stepLoop = cfg.loop ?? false;
       this.jumpDescending = false;
     } else if (type === MoveType.KNOCK_DOWN) {
       this._stepDefs = buildKnockDownSteps(this);
@@ -184,6 +194,11 @@ export class Fighter extends Phaser.GameObjects.Sprite {
       this._stepDefs = [];
       this._stepIdx = 0;
       this._stepTimer = 0;
+    }
+
+    // Reset jumpDescending when entering ANY jump type
+    if (isJump && !wasInJump) {
+      this.jumpDescending = false;
     }
 
     // Jump attack: inherit remaining steps from parent jump

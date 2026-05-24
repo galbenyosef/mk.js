@@ -74,6 +74,15 @@ const MOVE_LOOP: Partial<Record<MoveType, boolean>> = {
 
 const MOVE_YOYO: Partial<Record<MoveType, boolean>> = {
   [MoveType.JUMP]: true,
+  [MoveType.HIGH_PUNCH]: true,
+  [MoveType.LOW_PUNCH]: true,
+  [MoveType.HIGH_KICK]: true,
+  [MoveType.LOW_KICK]: true,
+  [MoveType.UPPERCUT]: true,
+  [MoveType.SPIN_KICK]: true,
+  [MoveType.SQUAT_LOW_KICK]: true,
+  [MoveType.SQUAT_HIGH_KICK]: true,
+  [MoveType.SQUAT_LOW_PUNCH]: true,
 };
 
 const MOVE_FRAME_LIMIT: Partial<Record<MoveType, number>> = {

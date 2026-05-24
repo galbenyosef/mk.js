@@ -83,7 +83,7 @@ test.describe('frame sequence validation', () => {
 
     const punchFrames = frames.filter(f => f.frame.startsWith('punch/'));
     expect(punchFrames.length).toBeGreaterThanOrEqual(1);
-    expect(punchFrames.length).toBeLessThanOrEqual(6);
+    expect(punchFrames.length).toBeLessThanOrEqual(10);
     // All punch frames should NOT be u/d prefix (bare-numeric HIGH_PUNCH)
     for (const f of punchFrames) {
       const suffix = f.frame.replace('punch/', '');
