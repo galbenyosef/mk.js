@@ -151,11 +151,12 @@ export class Fighter extends Phaser.GameObjects.Sprite {
 
   trySetMove(type: MoveType, force = false): boolean {
     if (!force && this.locked && type !== MoveType.WIN) {
-      const allJumpMoves = new Set([...JUMP_TYPES]);
-      if (!(JUMP_TYPES.has(this.currentMove) && allJumpMoves.has(type))) return false;
+      // Legacy: only jump attacks during descent are allowed while locked
       const jumpAttacks = [MoveType.FORWARD_JUMP_KICK, MoveType.BACKWARD_JUMP_KICK,
         MoveType.FORWARD_JUMP_PUNCH, MoveType.BACKWARD_JUMP_PUNCH];
-      if (jumpAttacks.includes(type) && !this.jumpDescending) return false;
+      if (!(JUMP_TYPES.has(this.currentMove) && jumpAttacks.includes(type) && this.jumpDescending)) {
+        return false;
+      }
     }
     if (!force && this.currentMove === type) return false;
 
