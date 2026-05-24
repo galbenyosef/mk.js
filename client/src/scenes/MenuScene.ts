@@ -71,5 +71,18 @@ export class MenuScene extends Phaser.Scene {
         }
       });
     });
+
+// Diagnostics button
+const diagBtn = this.add.text(300, 370, 'DIAGNOSTICS', {
+  fontFamily: 'monospace', fontSize: '14px', color: '#888888',
+  backgroundColor: '#222', padding: { x: 12, y: 6 },
+}).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+diagBtn.on('pointerover', () => diagBtn.setColor('#ffff00'));
+diagBtn.on('pointerout', () => diagBtn.setColor('#888888'));
+diagBtn.on('pointerdown', () => {
+  this.scene.start('Diagnostics');
+});
   }
 }
+

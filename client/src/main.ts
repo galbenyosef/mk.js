@@ -4,6 +4,7 @@ import { PreloadScene } from './scenes/PreloadScene.js';
 import { MenuScene } from './scenes/MenuScene.js';
 import { LobbyScene } from './scenes/LobbyScene.js';
 import { GameScene } from './scenes/GameScene.js';
+import { DiagnosticsScene } from './scenes/DiagnosticsScene.js';
 import { isDeterministic } from './config.js';
 
 declare global {
@@ -18,7 +19,7 @@ const config: Phaser.Types.Core.GameConfig = {
   height: 400,
   parent: 'game-container',
   backgroundColor: '#000000',
-  scene: [BootScene, PreloadScene, MenuScene, LobbyScene, GameScene],
+  scene: [BootScene, PreloadScene, MenuScene, LobbyScene, GameScene, DiagnosticsScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

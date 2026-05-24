@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { getDiagnosticsScene } from '../config.js';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -6,6 +7,11 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.scene.start('Preload');
+    const diagScene = getDiagnosticsScene();
+    if (diagScene) {
+      this.scene.start('Diagnostics');
+    } else {
+      this.scene.start('Preload');
+    }
   }
 }
