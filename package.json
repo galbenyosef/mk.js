@@ -20,6 +20,7 @@
   "devDependencies": {
     "@playwright/cli": "^0.1.13",
     "@playwright/test": "^1.60.0",
+    "cross-env": "^10.1.0",
     "pixelmatch": "^7.2.0",
     "playwright": "^1.60.0",
     "pngjs": "^7.0.0",
