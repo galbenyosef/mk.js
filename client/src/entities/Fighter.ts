@@ -39,6 +39,16 @@ export const JUMP_TYPES = new Set([
 interface StepDef { dx: number; dy: number; }
 
 const STEP_CONFIGS: Partial<Record<MoveType, { duration: number; steps: StepDef[]; loop?: boolean }>> = {
+  [MoveType.JUMP]: {
+    duration: 60,
+    steps: [
+      { dx: 0, dy: 20 },  { dx: 0, dy: -20 },
+      { dx: 0, dy: -20 },  { dx: 0, dy: -20 },
+      { dx: 0, dy: 25 },   { dx: 0, dy: 25 },
+      { dx: 0, dy: 25 },   { dx: 0, dy: 25 },
+      { dx: 0, dy: 25 },   { dx: 0, dy: 25 },
+    ],
+  },
   [MoveType.WALK]: {
     duration: 80, steps: [{ dx: 15, dy: 0 }], loop: true,
   },

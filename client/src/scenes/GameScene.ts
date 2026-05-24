@@ -267,6 +267,11 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     if (this._hasHit[attacker.playerIndex]) return;
+    // Legacy: hit only at specific frame index
+    if (config.hitFrame >= 0) {
+      const frameIdx = attacker.anims?.currentFrame?.index ?? -1;
+      if (frameIdx < config.hitFrame) return;
+    }
     if (!this.arena.blockOverlap(attacker, defender)) return;
     this._hasHit[attacker.playerIndex] = true;
     defender.takeDamage(config.damage, attacker.currentMove);
