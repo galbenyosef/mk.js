@@ -11,6 +11,18 @@ import { NetworkController } from '../controllers/NetworkController.js';
 import { BasicController } from '../controllers/BasicController.js';
 import type { BaseController } from '../controllers/BaseController.js';
 import { DebugOverlay } from '../debug/DebugOverlay.js';
+import { getReplayFile } from '../config.js';
+
+interface ReplayInputState {
+  LEFT: boolean;
+  RIGHT: boolean;
+  UP: boolean;
+  DOWN: boolean;
+  A: boolean;
+  B: boolean;
+  C: boolean;
+  D: boolean;
+}
 
 export class GameScene extends Phaser.Scene {
   public fighters!: [Fighter, Fighter];
@@ -65,6 +77,8 @@ export class GameScene extends Phaser.Scene {
         break;
     }
 
+    this._replayFile = getReplayFile();
+
     this.startRound(1);
   }
 
@@ -104,6 +118,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private _pressed: Record<number, boolean> = {};
+  private _replayFile: string | null = null;
   private _addPlayer1Keyboard(): void {
     const k = { HP: 76, LP: 74, LK: 75, HK: 186, BLOCK: 32, RIGHT: 68, LEFT: 65, UP: 87, DOWN: 83 };
     this.input.keyboard!.on('keydown', (e: KeyboardEvent) => {
@@ -116,6 +131,18 @@ export class GameScene extends Phaser.Scene {
   }
 
   private _processP1Keyboard(): void {
+    if (this._replayFile) {
+      const replayCtrl = (window as any).__MK_REPLAY;
+      if (!replayCtrl) return;
+      const state: ReplayInputState = replayCtrl.getState();
+      const f = this.fighters[0];
+      const move = this._getReplayMove(state, f.currentMove);
+      if (move !== undefined) {
+        f.trySetMove(move);
+      }
+      return;
+    }
+
     const f = this.fighters[0];
     const move = this._getP1Move(f.currentMove);
     if (move !== undefined) {
@@ -173,6 +200,51 @@ export class GameScene extends Phaser.Scene {
     }
     if (p[k.DOWN]) return m.SQUAT;
     if (p[k.UP]) return m.JUMP;
+    return undefined;
+  }
+
+  private _getReplayMove(state: ReplayInputState, currentMove: MoveType): MoveType | undefined {
+    const m = MoveType;
+    const jumping = currentMove === m.JUMP || currentMove === m.FORWARD_JUMP
+      || currentMove === m.BACKWARD_JUMP || currentMove === m.FORWARD_JUMP_KICK
+      || currentMove === m.BACKWARD_JUMP_KICK || currentMove === m.FORWARD_JUMP_PUNCH
+      || currentMove === m.BACKWARD_JUMP_PUNCH;
+
+    if (!state.LEFT && !state.RIGHT && !state.UP && !state.DOWN
+      && !state.A && !state.B && !state.C && !state.D) {
+      if (currentMove === m.SQUAT) return m.STAND_UP;
+      return m.STAND;
+    }
+    if (state.A) {
+      if (state.DOWN) return m.UPPERCUT;
+      if (state.UP || jumping) return m.FORWARD_JUMP_PUNCH;
+      return m.HIGH_PUNCH;
+    }
+    if (state.B) {
+      if (state.DOWN) return m.SQUAT_LOW_PUNCH;
+      if (state.UP || jumping) return m.FORWARD_JUMP_PUNCH;
+      return m.LOW_PUNCH;
+    }
+    if (state.C) {
+      if (state.DOWN) return m.SQUAT_HIGH_KICK;
+      if (state.UP || jumping) return m.FORWARD_JUMP_KICK;
+      return m.HIGH_KICK;
+    }
+    if (state.D) {
+      if (state.DOWN) return m.SQUAT_LOW_KICK;
+      if (state.UP || jumping) return m.FORWARD_JUMP_KICK;
+      return m.LOW_KICK;
+    }
+    if (state.LEFT) {
+      if (state.UP || jumping) return m.BACKWARD_JUMP;
+      return m.WALK_BACKWARD;
+    }
+    if (state.RIGHT) {
+      if (state.UP || jumping) return m.FORWARD_JUMP;
+      return m.WALK;
+    }
+    if (state.DOWN) return m.SQUAT;
+    if (state.UP) return m.JUMP;
     return undefined;
   }
 
