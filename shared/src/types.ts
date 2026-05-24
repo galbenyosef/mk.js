@@ -36,6 +36,8 @@ export interface GameOptions {
   arena: string;
   gameName?: string;
   isHost?: boolean;
+  deterministicMode?: boolean;
+  replayFile?: string;
 }
 
 export interface GameInfo {
