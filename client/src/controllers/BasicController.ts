@@ -10,7 +10,7 @@ import type { BaseController } from './BaseController.js';
 export const P1_KEYS = {
   UP: 87, LEFT: 65, DOWN: 83, RIGHT: 68,
   LP: 74, LK: 75, HP: 76, HK: 186,
-  BLOCK: 32, UPPERCUT: 85,
+  BLOCK: 32,
 };
 
 export class BasicController implements BaseController {
@@ -30,42 +30,57 @@ export class BasicController implements BaseController {
   }
 
   update(): void {
-    const move = this._getMove();
-    // Only set move if it changed — prevents re-triggering attacks on held keys
-    if (move !== undefined && move !== this._lastMove) {
+    const move = this._getMove(this._fighters[0].currentMove);
+    if (move !== undefined) {
       this._fighters[0].trySetMove(move);
     }
-    this._lastMove = move;
   }
 
   destroy(): void {}
 
-  _getMove(): MoveType | undefined {
+  _getMove(currentMove: MoveType): MoveType | undefined {
     const p = this._pressed;
     const k = P1_KEYS;
     const m = MoveType;
-    if (Object.keys(p).length === 0) return m.STAND;
+    if (Object.keys(p).length === 0) {
+      if (currentMove === m.SQUAT) return m.STAND_UP;
+      return m.STAND;
+    }
+    const jumping = currentMove === m.JUMP || currentMove === m.FORWARD_JUMP
+      || currentMove === m.BACKWARD_JUMP || currentMove === m.FORWARD_JUMP_KICK
+      || currentMove === m.BACKWARD_JUMP_KICK || currentMove === m.FORWARD_JUMP_PUNCH
+      || currentMove === m.BACKWARD_JUMP_PUNCH;
+    if (p[k.HP]) {
+      if (p[k.DOWN]) return m.UPPERCUT;
+      if (p[k.UP] || jumping) return m.FORWARD_JUMP_PUNCH;
+      return m.HIGH_PUNCH;
+    }
+    if (p[k.LP]) {
+      if (p[k.DOWN]) return m.SQUAT_LOW_PUNCH;
+      if (p[k.UP] || jumping) return m.FORWARD_JUMP_PUNCH;
+      return m.LOW_PUNCH;
+    }
+    if (p[k.HK]) {
+      if (p[k.DOWN]) return m.SQUAT_HIGH_KICK;
+      if (p[k.UP] || jumping) return m.FORWARD_JUMP_KICK;
+      return m.HIGH_KICK;
+    }
+    if (p[k.LK]) {
+      if (p[k.DOWN]) return m.SQUAT_LOW_KICK;
+      if (p[k.UP] || jumping) return m.FORWARD_JUMP_KICK;
+      return m.LOW_KICK;
+    }
     if (p[k.BLOCK]) return m.BLOCK;
     if (p[k.LEFT]) {
-      if (p[k.UP]) return m.BACKWARD_JUMP;
+      if (p[k.UP] || jumping) return m.BACKWARD_JUMP;
       return m.WALK_BACKWARD;
     }
     if (p[k.RIGHT]) {
-      if (p[k.UP]) return m.FORWARD_JUMP;
+      if (p[k.UP] || jumping) return m.FORWARD_JUMP;
       return m.WALK;
     }
-    if (p[k.DOWN]) {
-      if (p[k.UPPERCUT]) return m.UPPERCUT;
-      if (p[k.LK]) return m.SQUAT_LOW_KICK;
-      if (p[k.HK]) return m.SQUAT_HIGH_KICK;
-      if (p[k.LP]) return m.SQUAT_LOW_PUNCH;
-      return m.SQUAT;
-    }
-    if (p[k.HK]) return m.HIGH_KICK;
-    if (p[k.LK]) return m.LOW_KICK;
+    if (p[k.DOWN]) return m.SQUAT;
     if (p[k.UP]) return m.JUMP;
-    if (p[k.LP]) return m.LOW_PUNCH;
-    if (p[k.HP]) return m.HIGH_PUNCH;
     return undefined;
   }
 }

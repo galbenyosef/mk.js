@@ -46,13 +46,13 @@ export class GameScene extends Phaser.Scene {
 
     this.hud = new HUD(this, this.fighters);
 
+    this._addPlayer1Keyboard();
     switch (this.options.mode) {
       case 'local':
         this.controller = new LocalController(this, this.fighters, this);
         break;
       case 'ai':
         this.controller = new AIController(this, this.fighters, this);
-        this._addPlayer1Keyboard();
         break;
       case 'network':
         this.controller = new NetworkController(this, this.fighters, this, this.options.isHost ?? false);
@@ -74,7 +74,19 @@ export class GameScene extends Phaser.Scene {
     for (const f of this.fighters) {
       const config = getMoveConfig(f.currentMove);
       if (config.velocityX) f.x += config.velocityX * (delta / 16.667);
-      if (config.velocityY) f.y += config.velocityY * (delta / 16.667);
+      if (config.velocityY) {
+        if (f.currentMove === MoveType.JUMP || f.currentMove === MoveType.BACKWARD_JUMP) {
+          const progress = f.anims.getProgress?.() ?? 0;
+          const vy = progress <= 0.5 ? -Math.abs(config.velocityY) : Math.abs(config.velocityY);
+          f.y += vy * (delta / 16.667);
+        } else {
+          f.y += config.velocityY * (delta / 16.667);
+        }
+      }
+      if (f.playerIndex === 0 && config.damage > 0) {
+        const walkVx = this.getMoveVelocityX();
+        if (walkVx) f.x += walkVx * (delta / 16.667);
+      }
     }
 
     this.arena.syncFighters(this.fighters[0], this.fighters[1]);
@@ -89,9 +101,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   private _pressed: Record<number, boolean> = {};
-  private _p1LastMove: MoveType | undefined;
   private _addPlayer1Keyboard(): void {
-    const k = { HP: 76, LP: 74, LK: 75, HK: 186, BLOCK: 32, RIGHT: 68, LEFT: 65, UP: 87, DOWN: 83, UPPERCUT: 85 };
+    const k = { HP: 76, LP: 74, LK: 75, HK: 186, BLOCK: 32, RIGHT: 68, LEFT: 65, UP: 87, DOWN: 83 };
     this.input.keyboard!.on('keydown', (e: KeyboardEvent) => {
       if (e.repeat) return;
       this._pressed[e.keyCode] = true;
@@ -102,39 +113,63 @@ export class GameScene extends Phaser.Scene {
   }
 
   private _processP1Keyboard(): void {
-    const move = this._getP1Move();
-    if (move !== undefined && move !== this._p1LastMove) {
-      this.fighters[0].trySetMove(move);
+    const f = this.fighters[0];
+    const move = this._getP1Move(f.currentMove);
+    if (move !== undefined) {
+      f.trySetMove(move);
     }
-    this._p1LastMove = move;
   }
 
-  private _getP1Move(): MoveType | undefined {
+  private getMoveVelocityX(): number {
+    if (this._pressed[65]) return -2;
+    if (this._pressed[68]) return 2;
+    return 0;
+  }
+
+  private _getP1Move(currentMove: MoveType): MoveType | undefined {
     const p = this._pressed;
-    const k = { HP: 76, LP: 74, LK: 75, HK: 186, BLOCK: 32, RIGHT: 68, LEFT: 65, UP: 87, DOWN: 83, UPPERCUT: 85 };
+    const k = { HP: 76, LP: 74, LK: 75, HK: 186, BLOCK: 32, RIGHT: 68, LEFT: 65, UP: 87, DOWN: 83 };
     const m = MoveType;
-    if (Object.keys(p).length === 0) return m.STAND;
+    if (Object.keys(p).length === 0) {
+      if (currentMove === m.SQUAT) return m.STAND_UP;
+      return m.STAND;
+    }
+    const jumping = currentMove === m.JUMP || currentMove === m.FORWARD_JUMP
+      || currentMove === m.BACKWARD_JUMP || currentMove === m.FORWARD_JUMP_KICK
+      || currentMove === m.BACKWARD_JUMP_KICK || currentMove === m.FORWARD_JUMP_PUNCH
+      || currentMove === m.BACKWARD_JUMP_PUNCH;
+
+    if (p[k.HP]) {
+      if (p[k.DOWN]) return m.UPPERCUT;
+      if (p[k.UP] || jumping) return m.FORWARD_JUMP_PUNCH;
+      return m.HIGH_PUNCH;
+    }
+    if (p[k.LP]) {
+      if (p[k.DOWN]) return m.SQUAT_LOW_PUNCH;
+      if (p[k.UP] || jumping) return m.FORWARD_JUMP_PUNCH;
+      return m.LOW_PUNCH;
+    }
+    if (p[k.HK]) {
+      if (p[k.DOWN]) return m.SQUAT_HIGH_KICK;
+      if (p[k.UP] || jumping) return m.FORWARD_JUMP_KICK;
+      return m.HIGH_KICK;
+    }
+    if (p[k.LK]) {
+      if (p[k.DOWN]) return m.SQUAT_LOW_KICK;
+      if (p[k.UP] || jumping) return m.FORWARD_JUMP_KICK;
+      return m.LOW_KICK;
+    }
     if (p[k.BLOCK]) return m.BLOCK;
     if (p[k.LEFT]) {
-      if (p[k.UP]) return m.BACKWARD_JUMP;
+      if (p[k.UP] || jumping) return m.BACKWARD_JUMP;
       return m.WALK_BACKWARD;
     }
     if (p[k.RIGHT]) {
-      if (p[k.UP]) return m.FORWARD_JUMP;
+      if (p[k.UP] || jumping) return m.FORWARD_JUMP;
       return m.WALK;
     }
-    if (p[k.DOWN]) {
-      if (p[k.UPPERCUT]) return m.UPPERCUT;
-      if (p[k.LK]) return m.SQUAT_LOW_KICK;
-      if (p[k.HK]) return m.SQUAT_HIGH_KICK;
-      if (p[k.LP]) return m.SQUAT_LOW_PUNCH;
-      return m.SQUAT;
-    }
-    if (p[k.HK]) return m.HIGH_KICK;
-    if (p[k.LK]) return m.LOW_KICK;
+    if (p[k.DOWN]) return m.SQUAT;
     if (p[k.UP]) return m.JUMP;
-    if (p[k.LP]) return m.LOW_PUNCH;
-    if (p[k.HP]) return m.HIGH_PUNCH;
     return undefined;
   }
 

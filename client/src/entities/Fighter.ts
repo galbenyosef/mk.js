@@ -47,7 +47,10 @@ export class Fighter extends Phaser.GameObjects.Sprite {
     orientation: 'left' | 'right',
     atlasKey: string = `fighters/${fighterName}`,
   ) {
-    super(scene, x, y, atlasKey, 'stance/01');
+    const tex = scene.textures.get(atlasKey);
+    const stanceFrames = tex?.getFrameNames().filter((n: string) => n.startsWith('stance/') && /^stance\/\d+$/.test(n)) ?? [];
+    const firstStance = stanceFrames.sort()[0] ?? 'stance/01';
+    super(scene, x, y, atlasKey, firstStance);
     this.playerIndex = playerIndex;
     this._orientation = orientation;
     this.hp = CONFIG.STARTING_HP;
@@ -60,6 +63,9 @@ export class Fighter extends Phaser.GameObjects.Sprite {
         this.locked = false;
         const config = getMoveConfig(this.currentMove);
         if (config.returnTo !== this.currentMove) {
+          if (config.returnTo === MoveType.STAND) {
+            this.y = CONFIG.PLAYER_TOP;
+          }
           this.trySetMove(config.returnTo);
         }
       }
@@ -77,9 +83,16 @@ export class Fighter extends Phaser.GameObjects.Sprite {
   }
 
   trySetMove(type: MoveType, force = false): boolean {
-    if (this.locked && type !== MoveType.WIN) return false;
+    if (!force && this.locked && type !== MoveType.WIN) {
+      const jumpMoves = [MoveType.JUMP, MoveType.FORWARD_JUMP, MoveType.BACKWARD_JUMP];
+      const jumpAttacks = [MoveType.FORWARD_JUMP_KICK, MoveType.BACKWARD_JUMP_KICK,
+        MoveType.FORWARD_JUMP_PUNCH, MoveType.BACKWARD_JUMP_PUNCH];
+      const isJumpToAttack = jumpMoves.includes(this.currentMove) && jumpAttacks.includes(type);
+      if (!isJumpToAttack) return false;
+    }
     if (!force && this.currentMove === type) return false;
 
+    this.locked = false;
     this.currentMove = type;
     const config = getMoveConfig(type);
     this.locked = config.locksPlayer;
@@ -88,7 +101,6 @@ export class Fighter extends Phaser.GameObjects.Sprite {
     if (this.scene.anims.exists(animKey)) {
       this.play(animKey);
     } else {
-      // Fallback: show a static frame so we never see __BASE
       const fallback = FALLBACK_FRAME[type];
       if (fallback) {
         try { this.setFrame(fallback); } catch {}
@@ -127,8 +139,8 @@ export class Fighter extends Phaser.GameObjects.Sprite {
 
   reset(): void {
     this.hp = CONFIG.STARTING_HP;
-    this.currentMove = MoveType.STAND;
     this.locked = false;
+    this.currentMove = undefined as unknown as MoveType;
     this.trySetMove(MoveType.STAND);
   }
 }
