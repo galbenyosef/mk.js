@@ -60,8 +60,8 @@ export class DiagnosticsScene extends Phaser.Scene {
       }).setOrigin(0.5, 0);
       yOffset += 25;
 
-      const animKeys = Object.keys((this.anims as any).anims.entries)
-        .filter((k: string) => k.startsWith(`${fighter}_`));
+      const allAnimKeys: string[] = (this.anims as any).anims.keys ?? [];
+      const animKeys = allAnimKeys.filter((k: string) => k.startsWith(`${fighter}_`));
 
       let animX = 20;
       for (const key of animKeys) {
