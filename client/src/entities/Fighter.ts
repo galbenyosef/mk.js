@@ -84,11 +84,12 @@ export class Fighter extends Phaser.GameObjects.Sprite {
 
   trySetMove(type: MoveType, force = false): boolean {
     if (!force && this.locked && type !== MoveType.WIN) {
-      const jumpMoves = [MoveType.JUMP, MoveType.FORWARD_JUMP, MoveType.BACKWARD_JUMP];
-      const jumpAttacks = [MoveType.FORWARD_JUMP_KICK, MoveType.BACKWARD_JUMP_KICK,
-        MoveType.FORWARD_JUMP_PUNCH, MoveType.BACKWARD_JUMP_PUNCH];
-      const isJumpToAttack = jumpMoves.includes(this.currentMove) && jumpAttacks.includes(type);
-      if (!isJumpToAttack) return false;
+      const jumpStates = new Set([MoveType.JUMP, MoveType.FORWARD_JUMP, MoveType.BACKWARD_JUMP,
+        MoveType.FORWARD_JUMP_KICK, MoveType.BACKWARD_JUMP_KICK,
+        MoveType.FORWARD_JUMP_PUNCH, MoveType.BACKWARD_JUMP_PUNCH]);
+      const allJumpMoves = new Set([...jumpStates]);
+      const allowed = jumpStates.has(this.currentMove) && allJumpMoves.has(type);
+      if (!allowed) return false;
     }
     if (!force && this.currentMove === type) return false;
 
