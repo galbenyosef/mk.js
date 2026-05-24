@@ -60,26 +60,28 @@ export class LocalController implements BaseController {
       || f.currentMove === m.BACKWARD_JUMP || f.currentMove === m.FORWARD_JUMP_KICK
       || f.currentMove === m.BACKWARD_JUMP_KICK || f.currentMove === m.FORWARD_JUMP_PUNCH
       || f.currentMove === m.BACKWARD_JUMP_PUNCH;
+    const isBackwardJump = f.currentMove === m.BACKWARD_JUMP
+      || f.currentMove === m.BACKWARD_JUMP_KICK || f.currentMove === m.BACKWARD_JUMP_PUNCH;
     if (pressed.has(k.HP)) {
       if (pressed.has(k.DOWN)) return m.UPPERCUT;
-      if (pressed.has(k.UP) || jumping) return m.FORWARD_JUMP_PUNCH;
+      if (pressed.has(k.UP) || jumping) return isBackwardJump ? m.BACKWARD_JUMP_PUNCH : m.FORWARD_JUMP_PUNCH;
       return m.HIGH_PUNCH;
     }
     if (pressed.has(k.LP)) {
       if (pressed.has(k.DOWN)) return m.SQUAT_LOW_PUNCH;
-      if (pressed.has(k.UP) || jumping) return m.FORWARD_JUMP_PUNCH;
+      if (pressed.has(k.UP) || jumping) return isBackwardJump ? m.BACKWARD_JUMP_PUNCH : m.FORWARD_JUMP_PUNCH;
       return m.LOW_PUNCH;
     }
     if (pressed.has(k.HK)) {
       if (pressed.has(k.DOWN)) return m.SQUAT_HIGH_KICK;
-      if (pressed.has(k.UP) || jumping) return m.FORWARD_JUMP_KICK;
+      if (pressed.has(k.UP) || jumping) return isBackwardJump ? m.BACKWARD_JUMP_KICK : m.FORWARD_JUMP_KICK;
       if (pressed.has(k.LEFT) && f.orientation === 'left') return m.SPIN_KICK;
       if (pressed.has(k.RIGHT) && f.orientation === 'right') return m.SPIN_KICK;
       return m.HIGH_KICK;
     }
     if (pressed.has(k.LK)) {
       if (pressed.has(k.DOWN)) return m.SQUAT_LOW_KICK;
-      if (pressed.has(k.UP) || jumping) return m.FORWARD_JUMP_KICK;
+      if (pressed.has(k.UP) || jumping) return isBackwardJump ? m.BACKWARD_JUMP_KICK : m.FORWARD_JUMP_KICK;
       return m.LOW_KICK;
     }
     if (pressed.has(k.BLOCK)) return m.BLOCK;

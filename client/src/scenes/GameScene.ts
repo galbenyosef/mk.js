@@ -92,7 +92,10 @@ export class GameScene extends Phaser.Scene {
       const config = getMoveConfig(f.currentMove);
       if (config.velocityX) f.x += config.velocityX * (delta / 16.667);
       if (config.velocityY) {
-        if (f.currentMove === MoveType.JUMP || f.currentMove === MoveType.BACKWARD_JUMP) {
+        const jumpMoves = [MoveType.JUMP, MoveType.FORWARD_JUMP, MoveType.BACKWARD_JUMP,
+          MoveType.FORWARD_JUMP_KICK, MoveType.BACKWARD_JUMP_KICK,
+          MoveType.FORWARD_JUMP_PUNCH, MoveType.BACKWARD_JUMP_PUNCH];
+        if (jumpMoves.includes(f.currentMove)) {
           const progress = f.anims.getProgress?.() ?? 0;
           const vy = progress <= 0.5 ? -Math.abs(config.velocityY) : Math.abs(config.velocityY);
           f.y += vy * (delta / 16.667);
@@ -168,25 +171,27 @@ export class GameScene extends Phaser.Scene {
       || currentMove === m.BACKWARD_JUMP || currentMove === m.FORWARD_JUMP_KICK
       || currentMove === m.BACKWARD_JUMP_KICK || currentMove === m.FORWARD_JUMP_PUNCH
       || currentMove === m.BACKWARD_JUMP_PUNCH;
+    const isBackwardJump = currentMove === m.BACKWARD_JUMP
+      || currentMove === m.BACKWARD_JUMP_KICK || currentMove === m.BACKWARD_JUMP_PUNCH;
 
     if (p[k.HP]) {
       if (p[k.DOWN]) return m.UPPERCUT;
-      if (p[k.UP] || jumping) return m.FORWARD_JUMP_PUNCH;
+      if (p[k.UP] || jumping) return isBackwardJump ? m.BACKWARD_JUMP_PUNCH : m.FORWARD_JUMP_PUNCH;
       return m.HIGH_PUNCH;
     }
     if (p[k.LP]) {
       if (p[k.DOWN]) return m.SQUAT_LOW_PUNCH;
-      if (p[k.UP] || jumping) return m.FORWARD_JUMP_PUNCH;
+      if (p[k.UP] || jumping) return isBackwardJump ? m.BACKWARD_JUMP_PUNCH : m.FORWARD_JUMP_PUNCH;
       return m.LOW_PUNCH;
     }
     if (p[k.HK]) {
       if (p[k.DOWN]) return m.SQUAT_HIGH_KICK;
-      if (p[k.UP] || jumping) return m.FORWARD_JUMP_KICK;
+      if (p[k.UP] || jumping) return isBackwardJump ? m.BACKWARD_JUMP_KICK : m.FORWARD_JUMP_KICK;
       return m.HIGH_KICK;
     }
     if (p[k.LK]) {
       if (p[k.DOWN]) return m.SQUAT_LOW_KICK;
-      if (p[k.UP] || jumping) return m.FORWARD_JUMP_KICK;
+      if (p[k.UP] || jumping) return isBackwardJump ? m.BACKWARD_JUMP_KICK : m.FORWARD_JUMP_KICK;
       return m.LOW_KICK;
     }
     if (p[k.BLOCK]) return m.BLOCK;
@@ -209,6 +214,8 @@ export class GameScene extends Phaser.Scene {
       || currentMove === m.BACKWARD_JUMP || currentMove === m.FORWARD_JUMP_KICK
       || currentMove === m.BACKWARD_JUMP_KICK || currentMove === m.FORWARD_JUMP_PUNCH
       || currentMove === m.BACKWARD_JUMP_PUNCH;
+    const isBackwardJump = currentMove === m.BACKWARD_JUMP
+      || currentMove === m.BACKWARD_JUMP_KICK || currentMove === m.BACKWARD_JUMP_PUNCH;
 
     if (!state.LEFT && !state.RIGHT && !state.UP && !state.DOWN
       && !state.A && !state.B && !state.C && !state.D) {
@@ -217,22 +224,22 @@ export class GameScene extends Phaser.Scene {
     }
     if (state.A) {
       if (state.DOWN) return m.UPPERCUT;
-      if (state.UP || jumping) return m.FORWARD_JUMP_PUNCH;
+      if (state.UP || jumping) return isBackwardJump ? m.BACKWARD_JUMP_PUNCH : m.FORWARD_JUMP_PUNCH;
       return m.HIGH_PUNCH;
     }
     if (state.B) {
       if (state.DOWN) return m.SQUAT_LOW_PUNCH;
-      if (state.UP || jumping) return m.FORWARD_JUMP_PUNCH;
+      if (state.UP || jumping) return isBackwardJump ? m.BACKWARD_JUMP_PUNCH : m.FORWARD_JUMP_PUNCH;
       return m.LOW_PUNCH;
     }
     if (state.C) {
       if (state.DOWN) return m.SQUAT_HIGH_KICK;
-      if (state.UP || jumping) return m.FORWARD_JUMP_KICK;
+      if (state.UP || jumping) return isBackwardJump ? m.BACKWARD_JUMP_KICK : m.FORWARD_JUMP_KICK;
       return m.HIGH_KICK;
     }
     if (state.D) {
       if (state.DOWN) return m.SQUAT_LOW_KICK;
-      if (state.UP || jumping) return m.FORWARD_JUMP_KICK;
+      if (state.UP || jumping) return isBackwardJump ? m.BACKWARD_JUMP_KICK : m.FORWARD_JUMP_KICK;
       return m.LOW_KICK;
     }
     if (state.LEFT) {

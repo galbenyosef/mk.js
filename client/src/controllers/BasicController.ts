@@ -50,24 +50,26 @@ export class BasicController implements BaseController {
       || currentMove === m.BACKWARD_JUMP || currentMove === m.FORWARD_JUMP_KICK
       || currentMove === m.BACKWARD_JUMP_KICK || currentMove === m.FORWARD_JUMP_PUNCH
       || currentMove === m.BACKWARD_JUMP_PUNCH;
+    const isBackwardJump = currentMove === m.BACKWARD_JUMP
+      || currentMove === m.BACKWARD_JUMP_KICK || currentMove === m.BACKWARD_JUMP_PUNCH;
     if (p[k.HP]) {
       if (p[k.DOWN]) return m.UPPERCUT;
-      if (p[k.UP] || jumping) return m.FORWARD_JUMP_PUNCH;
+      if (p[k.UP] || jumping) return isBackwardJump ? m.BACKWARD_JUMP_PUNCH : m.FORWARD_JUMP_PUNCH;
       return m.HIGH_PUNCH;
     }
     if (p[k.LP]) {
       if (p[k.DOWN]) return m.SQUAT_LOW_PUNCH;
-      if (p[k.UP] || jumping) return m.FORWARD_JUMP_PUNCH;
+      if (p[k.UP] || jumping) return isBackwardJump ? m.BACKWARD_JUMP_PUNCH : m.FORWARD_JUMP_PUNCH;
       return m.LOW_PUNCH;
     }
     if (p[k.HK]) {
       if (p[k.DOWN]) return m.SQUAT_HIGH_KICK;
-      if (p[k.UP] || jumping) return m.FORWARD_JUMP_KICK;
+      if (p[k.UP] || jumping) return isBackwardJump ? m.BACKWARD_JUMP_KICK : m.FORWARD_JUMP_KICK;
       return m.HIGH_KICK;
     }
     if (p[k.LK]) {
       if (p[k.DOWN]) return m.SQUAT_LOW_KICK;
-      if (p[k.UP] || jumping) return m.FORWARD_JUMP_KICK;
+      if (p[k.UP] || jumping) return isBackwardJump ? m.BACKWARD_JUMP_KICK : m.FORWARD_JUMP_KICK;
       return m.LOW_KICK;
     }
     if (p[k.BLOCK]) return m.BLOCK;

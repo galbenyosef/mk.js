@@ -103,7 +103,7 @@ const MOVE_PREFIX: Partial<Record<MoveType, string>> = {
   [MoveType.SPIN_KICK]: 'r',
   [MoveType.JUMP]: 'j',
   [MoveType.FORWARD_JUMP]: 'f',
-  [MoveType.BACKWARD_JUMP]: 'f',
+  [MoveType.BACKWARD_JUMP]: 'j',
   [MoveType.FALL]: 'f',
   [MoveType.KNOCK_DOWN]: 'h',
   [MoveType.WIN]: '',
@@ -114,9 +114,9 @@ const MOVE_PREFIX: Partial<Record<MoveType, string>> = {
   [MoveType.SQUAT_HIGH_KICK]: 'd',
   [MoveType.SQUAT_LOW_PUNCH]: 'd',
   [MoveType.FORWARD_JUMP_KICK]: 'f',
-  [MoveType.BACKWARD_JUMP_KICK]: 'f',
+  [MoveType.BACKWARD_JUMP_KICK]: 'j',
   [MoveType.FORWARD_JUMP_PUNCH]: 'f',
-  [MoveType.BACKWARD_JUMP_PUNCH]: 'f',
+  [MoveType.BACKWARD_JUMP_PUNCH]: 'j',
 };
 
 export function getMoveConfig(type: MoveType): MoveDef {
