@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { MoveType, CONFIG } from '@mk.js/shared';
 import type { GameOptions } from '@mk.js/shared';
-import { Fighter } from '../entities/Fighter.js';
+import { Fighter, JUMP_TYPES } from '../entities/Fighter.js';
 import { Arena } from '../entities/Arena.js';
 import { HUD } from '../entities/HUD.js';
 import { createAnimations, getMoveConfig } from '../moves/MoveRegistry.js';
@@ -92,13 +92,10 @@ export class GameScene extends Phaser.Scene {
       const config = getMoveConfig(f.currentMove);
       if (config.velocityX) f.x += config.velocityX * (delta / 16.667);
       if (config.velocityY) {
-        const jumpMoves = [MoveType.JUMP, MoveType.FORWARD_JUMP, MoveType.BACKWARD_JUMP,
-          MoveType.FORWARD_JUMP_KICK, MoveType.BACKWARD_JUMP_KICK,
-          MoveType.FORWARD_JUMP_PUNCH, MoveType.BACKWARD_JUMP_PUNCH];
-        if (jumpMoves.includes(f.currentMove)) {
+        if (JUMP_TYPES.has(f.currentMove)) {
           if (!f.jumpDescending) {
-            const progress = f.anims.getProgress?.() ?? 0;
-            if (progress > 0.5) {
+            f.jumpElapsed += delta;
+            if (f.jumpElapsed > 320) {
               f.jumpDescending = true;
             }
           }

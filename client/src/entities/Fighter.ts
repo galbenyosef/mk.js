@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 import { MoveType, CONFIG } from '@mk.js/shared';
 import { getMoveConfig } from '../moves/MoveRegistry.js';
 
-// Map MoveType to a fallback frame name in the spritesheet
 const FALLBACK_FRAME: Partial<Record<MoveType, string>> = {
   [MoveType.STAND]: 'stance/01',
   [MoveType.WALK]: 'walk/01',
@@ -31,12 +30,20 @@ const FALLBACK_FRAME: Partial<Record<MoveType, string>> = {
   [MoveType.SQUAT_ENDURE]: 'beinghit/s01',
 };
 
+export const JUMP_TYPES = new Set([
+  MoveType.JUMP, MoveType.FORWARD_JUMP, MoveType.BACKWARD_JUMP,
+  MoveType.FORWARD_JUMP_KICK, MoveType.BACKWARD_JUMP_KICK,
+  MoveType.FORWARD_JUMP_PUNCH, MoveType.BACKWARD_JUMP_PUNCH,
+]);
+
 export class Fighter extends Phaser.GameObjects.Sprite {
   public playerIndex: number;
   public hp: number;
   public currentMove: MoveType = MoveType.STAND;
   public locked = false;
   public jumpDescending = false;
+  public jumpElapsed = 0;
+  public returnToStandTimer = 0;
   private _orientation: 'left' | 'right';
 
   constructor(
@@ -83,28 +90,50 @@ export class Fighter extends Phaser.GameObjects.Sprite {
     this.setFlipX(o === 'right');
   }
 
+  private _getJumpTotalTime(move: MoveType): number {
+    if (move === MoveType.FORWARD_JUMP || move === MoveType.BACKWARD_JUMP) return 640;
+    return 720; // JUMP (yoyo)
+  }
+
+  tickJumpTimer(delta: number): void {
+    if (this.returnToStandTimer > 0) {
+      this.returnToStandTimer -= delta;
+      if (this.returnToStandTimer <= 0) {
+        this.returnToStandTimer = 0;
+        this.locked = false;
+        this.y = CONFIG.PLAYER_TOP;
+        this.trySetMove(MoveType.STAND, true);
+      }
+    }
+  }
+
   trySetMove(type: MoveType, force = false): boolean {
     if (!force && this.locked && type !== MoveType.WIN) {
-      const jumpStates = new Set([MoveType.JUMP, MoveType.FORWARD_JUMP, MoveType.BACKWARD_JUMP,
-        MoveType.FORWARD_JUMP_KICK, MoveType.BACKWARD_JUMP_KICK,
-        MoveType.FORWARD_JUMP_PUNCH, MoveType.BACKWARD_JUMP_PUNCH]);
-      const allJumpMoves = new Set([...jumpStates]);
-      const allowed = jumpStates.has(this.currentMove) && allJumpMoves.has(type);
+      const allJumpMoves = new Set([...JUMP_TYPES]);
+      const allowed = JUMP_TYPES.has(this.currentMove) && allJumpMoves.has(type);
       if (!allowed) return false;
+      // Gate jump attacks behind descent (legacy behavior)
+      const jumpAttacks = [MoveType.FORWARD_JUMP_KICK, MoveType.BACKWARD_JUMP_KICK,
+        MoveType.FORWARD_JUMP_PUNCH, MoveType.BACKWARD_JUMP_PUNCH];
+      if (jumpAttacks.includes(type) && !this.jumpDescending) return false;
     }
     if (!force && this.currentMove === type) return false;
 
-    const wasInJump = this.currentMove === MoveType.JUMP || this.currentMove === MoveType.FORWARD_JUMP
-      || this.currentMove === MoveType.BACKWARD_JUMP || this.currentMove === MoveType.FORWARD_JUMP_KICK
-      || this.currentMove === MoveType.BACKWARD_JUMP_KICK || this.currentMove === MoveType.FORWARD_JUMP_PUNCH
-      || this.currentMove === MoveType.BACKWARD_JUMP_PUNCH;
-    const isJump = type === MoveType.JUMP || type === MoveType.FORWARD_JUMP
-      || type === MoveType.BACKWARD_JUMP || type === MoveType.FORWARD_JUMP_KICK
-      || type === MoveType.BACKWARD_JUMP_KICK || type === MoveType.FORWARD_JUMP_PUNCH
-      || type === MoveType.BACKWARD_JUMP_PUNCH;
+    const wasInJump = JUMP_TYPES.has(this.currentMove);
+    const isJump = JUMP_TYPES.has(type);
 
     if (isJump && !wasInJump) {
       this.jumpDescending = false;
+      this.jumpElapsed = 0;
+      this.returnToStandTimer = 0;
+    }
+
+    // Step inheritance: jump attack borrows remaining time from parent jump
+    const jumpAttacks = [MoveType.FORWARD_JUMP_KICK, MoveType.BACKWARD_JUMP_KICK,
+      MoveType.FORWARD_JUMP_PUNCH, MoveType.BACKWARD_JUMP_PUNCH];
+    if (jumpAttacks.includes(type) && JUMP_TYPES.has(this.currentMove) && !wasInJump) {
+      const total = this._getJumpTotalTime(this.currentMove);
+      this.returnToStandTimer = Math.max(total - this.jumpElapsed, 50);
     }
 
     this.locked = false;
@@ -156,6 +185,8 @@ export class Fighter extends Phaser.GameObjects.Sprite {
     this.hp = CONFIG.STARTING_HP;
     this.locked = false;
     this.currentMove = undefined as unknown as MoveType;
+    this.jumpDescending = false;
+    this.jumpElapsed = 0;
     this.trySetMove(MoveType.STAND);
   }
 }

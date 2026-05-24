@@ -193,7 +193,7 @@ test.describe('comprehensive move and sprite verification', () => {
     // Jump attacks: press W then attack while airborne
     async function doJumpAttack(attackKey: string, expectedMove: string, label: string) {
       await page.keyboard.down('w');
-      await page.waitForTimeout(150);
+      await page.waitForTimeout(500);
       await page.keyboard.down(attackKey);
       await page.waitForTimeout(150);
       const state = await page.evaluate(() => {
