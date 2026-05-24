@@ -13,12 +13,16 @@
     "build:assets": "echo 'no assets to build yet'",
     "start:server": "echo 'no server to start yet'",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:visual": "playwright test --config e2e/playwright.config.ts --grep visual",
+    "test:visual:update": "cross-env UPDATE_GOLDENS=1 playwright test --config e2e/playwright.config.ts --grep visual"
   },
   "devDependencies": {
     "@playwright/cli": "^0.1.13",
     "@playwright/test": "^1.60.0",
+    "pixelmatch": "^7.2.0",
     "playwright": "^1.60.0",
+    "pngjs": "^7.0.0",
     "sharp": "^0.34.5",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
