@@ -25,10 +25,10 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: 17000,
     proxy: {
       '/socket.io': {
-        target: 'http://localhost:55555',
+        target: 'http://localhost:17001',
         ws: true,
       },
     },

@@ -17,7 +17,7 @@ const io = new Server(httpServer, {
   },
 });
 
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 55555;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 17001;
 
 app.use(express.static(path.resolve(__dirname, '../../client/dist')));
 
