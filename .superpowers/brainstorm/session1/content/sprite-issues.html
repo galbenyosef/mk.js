@@ -1,0 +1,52 @@
+<h2>Sprite Differences Found</h2>
+<p class="subtitle">Comparing Sub-Zero and Kano vs. Liu Kang (reference)</p>
+
+<div class="section">
+  <h3>What I found so far</h3>
+  <p>All fighters download from the same source (mortalkombatwarehouse.com), but Sub-Zero and Kano have <strong>extra bare-numeric frames</strong> (e.g. <code>beinghit/01</code>, <code>beinghit/02</code>) that Liu Kang doesn't have. These extra frames get mixed into animations and mess up frame ordering.</p>
+</div>
+
+<div class="section">
+  <h3>Example: <code>duckjump/</code> category frame differences</h3>
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header">Liu Kang (correct)</div>
+      <div class="mockup-body" style="font-size: 12px; text-align: left; padding: 8px; font-family: monospace;">
+        duckjump/d01<br>
+        duckjump/d02<br>
+        duckjump/d03<br>
+        duckjump/dt01<br>
+        duckjump/dt02<br>
+        duckjump/f01~f08<br>
+        duckjump/j01~j03
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header">Sub-Zero (wrong)</div>
+      <div class="mockup-body" style="font-size: 12px; text-align: left; padding: 8px; font-family: monospace; color: #e74c3c;">
+        duckjump/<strong>01</strong> ← extra!<br>
+        duckjump/<strong>02</strong> ← extra!<br>
+        duckjump/<strong>03</strong> ← extra!<br>
+        duckjump/d01<br>
+        duckjump/d02<br>
+        duckjump/d03<br>
+        duckjump/dt01<br>
+        duckjump/dt02<br>
+        duckjump/f01~f08<br>
+        duckjump/j01~j03
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>What specific issues are you seeing?</h3>
+  <p>Tell me in the terminal:</p>
+  <ol>
+    <li><strong>Visual quality</strong> — sprites look different quality/palette?</li>
+    <li><strong>Wrong animations</strong> — wrong frames playing for moves?</li>
+    <li><strong>Missing frames</strong> — animations cut short or blank?</li>
+    <li><strong>Movement</strong> — incorrect positioning or speed?</li>
+    <li><strong>All of the above</strong></li>
+  </ol>
+</div>

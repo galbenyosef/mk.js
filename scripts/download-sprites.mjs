@@ -90,6 +90,13 @@ async function main() {
         process.stdout.write(`  [${category}] ${item.filename} (${i+1}/${items.length})\r`);
         try {
           await downloadFile(item.url, dest);
+          // Remove junk files that are too small to be real sprites (MKW site embeds icons with sprite paths)
+          const stat = await fs.stat(dest);
+          if (stat.size < 500) {
+            await fs.rm(dest);
+            console.warn(`\n  REMOVED junk: ${category}/${item.filename} (${stat.size} bytes)`);
+            continue;
+          }
           downloaded++;
         } catch (err) {
           console.error(`\n  FAILED: ${item.filename} - ${err.message}`);
