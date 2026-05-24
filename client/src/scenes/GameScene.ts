@@ -10,6 +10,7 @@ import { AIController } from '../controllers/AIController.js';
 import { NetworkController } from '../controllers/NetworkController.js';
 import { BasicController } from '../controllers/BasicController.js';
 import type { BaseController } from '../controllers/BaseController.js';
+import { DebugOverlay } from '../debug/DebugOverlay.js';
 
 export class GameScene extends Phaser.Scene {
   public fighters!: [Fighter, Fighter];
@@ -43,6 +44,8 @@ export class GameScene extends Phaser.Scene {
       new Fighter(this, 150, CONFIG.PLAYER_TOP, this.options.p1Fighter, 0, 'left'),
       new Fighter(this, 450, CONFIG.PLAYER_TOP, this.options.p2Fighter, 1, 'right'),
     ];
+
+    new DebugOverlay(this, this.fighters);
 
     this.hud = new HUD(this, this.fighters);
 
