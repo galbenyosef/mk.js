@@ -36,14 +36,43 @@ export const JUMP_TYPES = new Set([
   MoveType.FORWARD_JUMP_PUNCH, MoveType.BACKWARD_JUMP_PUNCH,
 ]);
 
+interface StepDef {
+  dx: number;
+  dy: number;
+}
+
+const STEP_CONFIGS: Partial<Record<MoveType, { duration: number; steps: StepDef[] }>> = {
+  [MoveType.FORWARD_JUMP]: {
+    duration: 80,
+    steps: [
+      { dx: 23, dy: -26 }, { dx: 23, dy: -26 },
+      { dx: 23, dy: -26 }, { dx: 23, dy: -26 },
+      { dx: 23, dy: 26 },  { dx: 23, dy: 26 },
+      { dx: 23, dy: 26 },  { dx: 23, dy: 26 },
+    ],
+  },
+  [MoveType.BACKWARD_JUMP]: {
+    duration: 80,
+    steps: [
+      { dx: -23, dy: -26 }, { dx: -23, dy: -26 },
+      { dx: -23, dy: -26 }, { dx: -23, dy: -26 },
+      { dx: -23, dy: 26 },  { dx: -23, dy: 26 },
+      { dx: -23, dy: 26 },  { dx: -23, dy: 26 },
+    ],
+  },
+};
+
 export class Fighter extends Phaser.GameObjects.Sprite {
   public playerIndex: number;
   public hp: number;
   public currentMove: MoveType = MoveType.STAND;
   public locked = false;
   public jumpDescending = false;
-  public jumpElapsed = 0;
-  public returnToStandTimer = 0;
+  // Step-based position tracking (for exact legacy movement)
+  private _stepTimer = 0;
+  private _stepIdx = 0;
+  private _stepDefs: StepDef[] = [];
+  private _stepDuration = 80;
   private _orientation: 'left' | 'right';
 
   constructor(
@@ -66,7 +95,7 @@ export class Fighter extends Phaser.GameObjects.Sprite {
     this.setOrigin(0.5, 1);
     this.setFlipX(orientation === 'right');
 
-    this.on('animationcomplete', (anim: Phaser.Animations.Animation) => {
+    this.on('animationcomplete', () => {
       if (this.locked) {
         this.locked = false;
         const config = getMoveConfig(this.currentMove);
@@ -74,15 +103,14 @@ export class Fighter extends Phaser.GameObjects.Sprite {
           if (config.returnTo === MoveType.STAND) {
             this.y = CONFIG.PLAYER_TOP;
           }
+          this._stepDefs = [];
           this.trySetMove(config.returnTo);
         }
       }
     });
   }
 
-  get orientation(): 'left' | 'right' {
-    return this._orientation;
-  }
+  get orientation(): 'left' | 'right' { return this._orientation; }
 
   setOrientation(o: 'left' | 'right'): void {
     if (this._orientation === o) return;
@@ -90,19 +118,33 @@ export class Fighter extends Phaser.GameObjects.Sprite {
     this.setFlipX(o === 'right');
   }
 
-  private _getJumpTotalTime(move: MoveType): number {
-    if (move === MoveType.FORWARD_JUMP || move === MoveType.BACKWARD_JUMP) return 640;
-    return 720; // JUMP (yoyo)
-  }
-
-  tickJumpTimer(delta: number): void {
-    if (this.returnToStandTimer > 0) {
-      this.returnToStandTimer -= delta;
-      if (this.returnToStandTimer <= 0) {
-        this.returnToStandTimer = 0;
+  /** Advances step-based position. Only used for step-defined moves (FJ/BJ). */
+  stepUpdate(delta: number): void {
+    if (this._stepDefs.length === 0) return;
+    this._stepTimer += delta;
+    while (this._stepTimer >= this._stepDuration) {
+      this._stepTimer -= this._stepDuration;
+      if (this._stepIdx < this._stepDefs.length) {
+        const s = this._stepDefs[this._stepIdx];
+        this.x += s.dx;
+        this.y += s.dy;
+        this._stepIdx++;
+        // Check descend at midpoint (step 4 of 8)
+        if (this._stepIdx === Math.ceil(this._stepDefs.length / 2)) {
+          this.jumpDescending = true;
+        }
+      }
+      if (this._stepIdx >= this._stepDefs.length) {
+        const cfg = getMoveConfig(this.currentMove);
         this.locked = false;
-        this.y = CONFIG.PLAYER_TOP;
-        this.trySetMove(MoveType.STAND, true);
+        this._stepDefs = [];
+        this._stepIdx = 0;
+        this._stepTimer = 0;
+        if (cfg.returnTo === MoveType.STAND) {
+          this.y = CONFIG.PLAYER_TOP;
+        }
+        this.trySetMove(cfg.returnTo);
+        return;
       }
     }
   }
@@ -110,9 +152,7 @@ export class Fighter extends Phaser.GameObjects.Sprite {
   trySetMove(type: MoveType, force = false): boolean {
     if (!force && this.locked && type !== MoveType.WIN) {
       const allJumpMoves = new Set([...JUMP_TYPES]);
-      const allowed = JUMP_TYPES.has(this.currentMove) && allJumpMoves.has(type);
-      if (!allowed) return false;
-      // Gate jump attacks behind descent (legacy behavior)
+      if (!(JUMP_TYPES.has(this.currentMove) && allJumpMoves.has(type))) return false;
       const jumpAttacks = [MoveType.FORWARD_JUMP_KICK, MoveType.BACKWARD_JUMP_KICK,
         MoveType.FORWARD_JUMP_PUNCH, MoveType.BACKWARD_JUMP_PUNCH];
       if (jumpAttacks.includes(type) && !this.jumpDescending) return false;
@@ -122,18 +162,31 @@ export class Fighter extends Phaser.GameObjects.Sprite {
     const wasInJump = JUMP_TYPES.has(this.currentMove);
     const isJump = JUMP_TYPES.has(type);
 
-    if (isJump && !wasInJump) {
+    // Step-based jump setup
+    const cfg = STEP_CONFIGS[type];
+    if (cfg) {
+      this._stepDefs = cfg.steps;
+      this._stepDuration = cfg.duration;
+      this._stepIdx = 0;
+      this._stepTimer = 0;
       this.jumpDescending = false;
-      this.jumpElapsed = 0;
-      this.returnToStandTimer = 0;
     }
 
-    // Step inheritance: jump attack borrows remaining time from parent jump
+    // Jump attack: inherit remaining steps from parent jump (legacy behavior)
     const jumpAttacks = [MoveType.FORWARD_JUMP_KICK, MoveType.BACKWARD_JUMP_KICK,
       MoveType.FORWARD_JUMP_PUNCH, MoveType.BACKWARD_JUMP_PUNCH];
-    if (jumpAttacks.includes(type) && JUMP_TYPES.has(this.currentMove) && !wasInJump) {
-      const total = this._getJumpTotalTime(this.currentMove);
-      this.returnToStandTimer = Math.max(total - this.jumpElapsed, 50);
+    if (jumpAttacks.includes(type) && wasInJump && this._stepDefs.length > 0) {
+      const remaining = Math.max(this._stepDefs.length - this._stepIdx, 1);
+      const isForward = type === MoveType.FORWARD_JUMP_KICK || type === MoveType.FORWARD_JUMP_PUNCH;
+      const newSteps: StepDef[] = [];
+      for (let i = 0; i < remaining; i++) {
+        newSteps.push({ dx: isForward ? 23 : -23, dy: 26 });
+      }
+      this._stepDefs = newSteps;
+      this._stepDuration = 80;
+      this._stepIdx = 0;
+      this._stepTimer = 0;
+      this.jumpDescending = true;
     }
 
     this.locked = false;
@@ -186,7 +239,9 @@ export class Fighter extends Phaser.GameObjects.Sprite {
     this.locked = false;
     this.currentMove = undefined as unknown as MoveType;
     this.jumpDescending = false;
-    this.jumpElapsed = 0;
+    this._stepDefs = [];
+    this._stepIdx = 0;
+    this._stepTimer = 0;
     this.trySetMove(MoveType.STAND);
   }
 }

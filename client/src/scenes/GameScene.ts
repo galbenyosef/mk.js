@@ -90,19 +90,24 @@ export class GameScene extends Phaser.Scene {
 
     for (const f of this.fighters) {
       const config = getMoveConfig(f.currentMove);
-      if (config.velocityX) f.x += config.velocityX * (delta / 16.667);
-      if (config.velocityY) {
-        if (JUMP_TYPES.has(f.currentMove)) {
-          if (!f.jumpDescending) {
-            f.jumpElapsed += delta;
-            if (f.jumpElapsed > 320) {
-              f.jumpDescending = true;
+      const isFjBj = f.currentMove === MoveType.FORWARD_JUMP || f.currentMove === MoveType.BACKWARD_JUMP
+        || f.currentMove === MoveType.FORWARD_JUMP_KICK || f.currentMove === MoveType.BACKWARD_JUMP_KICK
+        || f.currentMove === MoveType.FORWARD_JUMP_PUNCH || f.currentMove === MoveType.BACKWARD_JUMP_PUNCH;
+      if (isFjBj) {
+        f.stepUpdate(delta);
+      } else {
+        if (config.velocityX) f.x += config.velocityX * (delta / 16.667);
+        if (config.velocityY) {
+          if (f.currentMove === MoveType.JUMP) {
+            if (!f.jumpDescending) {
+              const progress = f.anims.getProgress?.() ?? 0;
+              if (progress > 0.5) f.jumpDescending = true;
             }
+            const vy = f.jumpDescending ? Math.abs(config.velocityY) : -Math.abs(config.velocityY);
+            f.y += vy * (delta / 16.667);
+          } else {
+            f.y += config.velocityY * (delta / 16.667);
           }
-          const vy = f.jumpDescending ? Math.abs(config.velocityY) : -Math.abs(config.velocityY);
-          f.y += vy * (delta / 16.667);
-        } else {
-          f.y += config.velocityY * (delta / 16.667);
         }
       }
       if (f.playerIndex === 0 && config.damage > 0) {
