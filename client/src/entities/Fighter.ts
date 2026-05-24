@@ -36,10 +36,7 @@ export const JUMP_TYPES = new Set([
   MoveType.FORWARD_JUMP_PUNCH, MoveType.BACKWARD_JUMP_PUNCH,
 ]);
 
-interface StepDef {
-  dx: number;
-  dy: number;
-}
+interface StepDef { dx: number; dy: number; }
 
 const STEP_CONFIGS: Partial<Record<MoveType, { duration: number; steps: StepDef[] }>> = {
   [MoveType.FORWARD_JUMP]: {
@@ -62,17 +59,27 @@ const STEP_CONFIGS: Partial<Record<MoveType, { duration: number; steps: StepDef[
   },
 };
 
+function buildKnockDownSteps(fighter: Fighter): StepDef[] {
+  const steps: StepDef[] = [];
+  const xDir = fighter.orientation === 'left' ? -25 : 25;
+  for (let i = 0; i < 10; i++) {
+    steps.push({ dx: xDir, dy: 10 });
+  }
+  return steps;
+}
+
 export class Fighter extends Phaser.GameObjects.Sprite {
   public playerIndex: number;
   public hp: number;
   public currentMove: MoveType = MoveType.STAND;
   public locked = false;
   public jumpDescending = false;
-  // Step-based position tracking (for exact legacy movement)
   private _stepTimer = 0;
   private _stepIdx = 0;
   private _stepDefs: StepDef[] = [];
   private _stepDuration = 80;
+  // Non-steps moves (attacks, stance) use this accumulator for loop timing
+  private _stepAccum = 0;
   private _orientation: 'left' | 'right';
 
   constructor(
@@ -111,6 +118,7 @@ export class Fighter extends Phaser.GameObjects.Sprite {
   }
 
   get orientation(): 'left' | 'right' { return this._orientation; }
+  get stepActive(): boolean { return this._stepDefs.length > 0; }
 
   setOrientation(o: 'left' | 'right'): void {
     if (this._orientation === o) return;
@@ -118,7 +126,6 @@ export class Fighter extends Phaser.GameObjects.Sprite {
     this.setFlipX(o === 'right');
   }
 
-  /** Advances step-based position. Only used for step-defined moves (FJ/BJ). */
   stepUpdate(delta: number): void {
     if (this._stepDefs.length === 0) return;
     this._stepTimer += delta;
@@ -129,7 +136,6 @@ export class Fighter extends Phaser.GameObjects.Sprite {
         this.x += s.dx;
         this.y += s.dy;
         this._stepIdx++;
-        // Check descend at midpoint (step 4 of 8)
         if (this._stepIdx === Math.ceil(this._stepDefs.length / 2)) {
           this.jumpDescending = true;
         }
@@ -151,7 +157,6 @@ export class Fighter extends Phaser.GameObjects.Sprite {
 
   trySetMove(type: MoveType, force = false): boolean {
     if (!force && this.locked && type !== MoveType.WIN) {
-      // Legacy: only jump attacks during descent are allowed while locked
       const jumpAttacks = [MoveType.FORWARD_JUMP_KICK, MoveType.BACKWARD_JUMP_KICK,
         MoveType.FORWARD_JUMP_PUNCH, MoveType.BACKWARD_JUMP_PUNCH];
       if (!(JUMP_TYPES.has(this.currentMove) && jumpAttacks.includes(type) && this.jumpDescending)) {
@@ -163,22 +168,32 @@ export class Fighter extends Phaser.GameObjects.Sprite {
     const wasInJump = JUMP_TYPES.has(this.currentMove);
     const isJump = JUMP_TYPES.has(type);
 
-    // Step-based jump setup
     const cfg = STEP_CONFIGS[type];
     if (cfg) {
       this._stepDefs = cfg.steps;
-      this._stepDuration = cfg.duration;
+      this._stepDuration = 80;
       this._stepIdx = 0;
       this._stepTimer = 0;
       this.jumpDescending = false;
+    } else if (type === MoveType.KNOCK_DOWN) {
+      this._stepDefs = buildKnockDownSteps(this);
+      this._stepDuration = 80;
+      this._stepIdx = 0;
+      this._stepTimer = 0;
+    } else {
+      this._stepDefs = [];
+      this._stepIdx = 0;
+      this._stepTimer = 0;
     }
 
-    // Jump attack: inherit remaining steps from parent jump (legacy behavior)
+    // Jump attack: inherit remaining steps from parent jump
     const jumpAttacks = [MoveType.FORWARD_JUMP_KICK, MoveType.BACKWARD_JUMP_KICK,
       MoveType.FORWARD_JUMP_PUNCH, MoveType.BACKWARD_JUMP_PUNCH];
-    if (jumpAttacks.includes(type) && wasInJump && this._stepDefs.length > 0) {
-      const remaining = Math.max(this._stepDefs.length - this._stepIdx, 1);
+    if (jumpAttacks.includes(type) && wasInJump) {
       const isForward = type === MoveType.FORWARD_JUMP_KICK || type === MoveType.FORWARD_JUMP_PUNCH;
+      const remaining = this._stepDefs.length > 0
+        ? Math.max(this._stepDefs.length - this._stepIdx, 1)
+        : 4;
       const newSteps: StepDef[] = [];
       for (let i = 0; i < remaining; i++) {
         newSteps.push({ dx: isForward ? 23 : -23, dy: 26 });

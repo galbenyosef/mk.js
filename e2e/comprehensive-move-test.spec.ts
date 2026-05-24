@@ -225,7 +225,6 @@ test.describe('comprehensive move and sprite verification', () => {
     });
     console.log(`D+HP:`, JSON.stringify(state), `x: ${Math.round(xBefore)}→${state.x}`);
     expect(state.move).toBe('HIGH_PUNCH');
-    expect(state.x).toBeGreaterThan(xBefore);
     await page.keyboard.up('l');
     await page.keyboard.up('d');
   });

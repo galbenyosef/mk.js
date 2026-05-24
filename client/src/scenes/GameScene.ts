@@ -89,13 +89,9 @@ export class GameScene extends Phaser.Scene {
     if (this.options.mode === 'ai') this._processP1Keyboard();
 
     for (const f of this.fighters) {
-      const config = getMoveConfig(f.currentMove);
-      const isFjBj = f.currentMove === MoveType.FORWARD_JUMP || f.currentMove === MoveType.BACKWARD_JUMP
-        || f.currentMove === MoveType.FORWARD_JUMP_KICK || f.currentMove === MoveType.BACKWARD_JUMP_KICK
-        || f.currentMove === MoveType.FORWARD_JUMP_PUNCH || f.currentMove === MoveType.BACKWARD_JUMP_PUNCH;
-      if (isFjBj) {
-        f.stepUpdate(delta);
-      } else {
+      f.stepUpdate(delta);
+      if (!f.stepActive) {
+        const config = getMoveConfig(f.currentMove);
         if (config.velocityX) f.x += config.velocityX * (delta / 16.667);
         if (config.velocityY) {
           if (f.currentMove === MoveType.JUMP) {
@@ -110,7 +106,7 @@ export class GameScene extends Phaser.Scene {
           }
         }
       }
-      if (f.playerIndex === 0 && config.damage > 0) {
+      if (f.playerIndex === 0 && getMoveConfig(f.currentMove).damage > 0) {
         const walkVx = this.getMoveVelocityX();
         if (walkVx) f.x += walkVx * (delta / 16.667);
       }
