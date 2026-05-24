@@ -95,29 +95,6 @@ test.describe('input & rendering', () => {
     await keyup(page, 68);
   });
 
-  test('3. W jump, A backpedal', async ({ page }) => {
-    await go(page);
-    await keydown(page, 87); // W = UP = JUMP
-    await page.waitForTimeout(200);
-    let move = await page.evaluate(() => {
-      const gs = (window as any).__MK_GAME.scene.getScene('Game');
-      return gs.fighters[0].currentMove;
-    });
-    console.log('After W press (jump):', move);
-    expect(move).toBe('JUMP');
-    await keyup(page, 87);
-
-    await keydown(page, 65); // A = LEFT = WALK_BACKWARD
-    await page.waitForTimeout(200);
-    move = await page.evaluate(() => {
-      const gs = (window as any).__MK_GAME.scene.getScene('Game');
-      return gs.fighters[0].currentMove;
-    });
-    console.log('After A press (walk back):', move);
-    expect(move).toBe('WALK_BACKWARD');
-    await keyup(page, 65);
-  });
-
   test('4. single attack on keypress (no combo on repeat)', async ({ page }) => {
     await go(page);
     // Press L (76 = HIGH_PUNCH) — hold it

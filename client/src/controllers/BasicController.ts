@@ -16,6 +16,7 @@ export const P1_KEYS = {
 export class BasicController implements BaseController {
   private _pressed: Record<number, boolean> = {};
   private _fighters!: [Fighter, Fighter];
+  private _lastMove: MoveType | undefined;
 
   constructor(scene: Phaser.Scene, fighters: [Fighter, Fighter], _gameScene: Phaser.Scene) {
     this._fighters = fighters;
@@ -30,7 +31,11 @@ export class BasicController implements BaseController {
 
   update(): void {
     const move = this._getMove();
-    if (move) this._fighters[0].trySetMove(move);
+    // Only set move if it changed — prevents re-triggering attacks on held keys
+    if (move !== undefined && move !== this._lastMove) {
+      this._fighters[0].trySetMove(move);
+    }
+    this._lastMove = move;
   }
 
   destroy(): void {}

@@ -27,7 +27,7 @@ const MOVE_CATEGORY: Partial<Record<MoveType, string>> = {
   [MoveType.STAND]: 'stance',
   [MoveType.WALK]: 'walk',
   [MoveType.WALK_BACKWARD]: 'walk',
-  [MoveType.SQUAT]: 'squat',
+  [MoveType.SQUAT]: 'duckjump',
   [MoveType.BLOCK]: 'block',
   [MoveType.HIGH_PUNCH]: 'punch',
   [MoveType.LOW_PUNCH]: 'punch',

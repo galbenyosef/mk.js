@@ -89,6 +89,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private _pressed: Record<number, boolean> = {};
+  private _p1LastMove: MoveType | undefined;
   private _addPlayer1Keyboard(): void {
     const k = { HP: 76, LP: 74, LK: 75, HK: 186, BLOCK: 32, RIGHT: 68, LEFT: 65, UP: 87, DOWN: 83, UPPERCUT: 85 };
     this.input.keyboard!.on('keydown', (e: KeyboardEvent) => {
@@ -102,7 +103,10 @@ export class GameScene extends Phaser.Scene {
 
   private _processP1Keyboard(): void {
     const move = this._getP1Move();
-    if (move) this.fighters[0].trySetMove(move);
+    if (move !== undefined && move !== this._p1LastMove) {
+      this.fighters[0].trySetMove(move);
+    }
+    this._p1LastMove = move;
   }
 
   private _getP1Move(): MoveType | undefined {
